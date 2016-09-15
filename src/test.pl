@@ -1,4 +1,4 @@
-$aaa = "aaa";
+$aaa = "bba";
 
 if( ref($aaa) eq "" ){
 	print "va";
