@@ -1,23 +1,32 @@
+package MySLE;
+
 use Time::HiRes;
 require "MyProgressBar.pm";
 
+my $species = "human";
+our $dataDir = "../data/$species/rev/";
 
 ###
-&DeleteColon;
+&SLExtractor;
 ###
 
 sub SLExtractor{
 ### This subroutine extracts SUBCELLULAR LOCATION in CC Lines.
 
 	my $startTime = Time::HiRes::time();
-	my $DBFilename = "../data/rev/ID-CC_rev_uniprot-all.txt";	
+	my $DBFilename = $MySLE::dirData."ID-CC_rev_uniprot-all.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-all.txt";
+	my $routineName = "SLExtractor";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
 	
-	open RF, ">ID-SL_rev_uniprot-all.txt";
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -54,17 +63,19 @@ sub SLOneLiner{
 
 	my $startTime = Time::HiRes::time();
 	
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-all.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allT1.txt";
-	
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-all.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allT1.txt";
+	my $routineName = "SLOneLiner";
 	
 	my $objPB = new MyProgressBar;
-	$objPB -> setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
 	
-	open RF, ">", $RFilename;
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -103,17 +114,19 @@ sub SLReplacer{
 ### This subroutine makes SL lines instead of "CC   -!- SUBCELLULAR LOCATION: ".
 
 	my $startTime = Time::HiRes::time();
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-allT1.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allT2.txt";
-
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-allT1.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allT2.txt";
+	my $routineName = "SLReqlacer";
 	
 	my $objPB = new MyProgressBar;
-	$objPB -> setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
 	
-	open RF, ">", $RFilename;
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -135,16 +148,19 @@ sub DeleteBracket{
 
 	my $startTime = Time::HiRes::time();
 
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-allT2.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allT3.txt";
-
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-allT2.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allT3.txt";
+	my $routineName = "DeleteBracket";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
-	open RF, ">", $RFilename;
+	
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -164,16 +180,19 @@ sub DeleteNote{
 
 	my $startTime = Time::HiRes::time();
 
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-allT3.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allT4.txt";
-
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-allT3.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allT4.txt";
+	my $routineName = "DeleteNote";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
-	open RF, ">", $RFilename;
+	
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -193,17 +212,19 @@ sub TakeNote{
 
 	my $startTime = Time::HiRes::time();
 	my $fileLine = 0;
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-allT3.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allTakenote.txt";
-
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-allT3.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allTakeNote.txt";
+	my $routineName = "TakeNote";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
 	
-	open RF, ">", $RFilename;
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
@@ -224,16 +245,19 @@ sub DeleteColon{
 
 	my $startTime = Time::HiRes::time();
 
-	my $DBFilename = "../data/rev/ID-SL_rev_uniprot-allT4.txt";
-	my $RFilename = "../data/rev/ID-SL_rev_uniprot-allT5.txt";
-
-	my $workingLine="";
+	my $DBFilename = $MySLE::dirData."ID-SL_rev_uniprot-allT4.txt";
+	my $ResultFileName = $MySLE::dirData."ID-SL_rev_uniprot-allT5.txt";
+	my $routineName = "DeleteColon";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($DBFilename);
+	
+	print "$routineName starts.\n";
 	
 	open DB,$DBFilename or die "No file";
-	open RF, ">", $RFilename;
+	
+	$objPB->setAll($DBFilename);
+	
+	open RF, ">$ResultFileName";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
