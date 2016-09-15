@@ -579,17 +579,19 @@ sub _argumentCheck2{
 	my $para;
 	
 	if($num == 0){
-		$query = undef;
-		$idRef = undef
-		$hashRef = undef;
-		$para = undef;
+		return $num;
 	}elsif($num == 1){
 		if(ref($$checkArg[0]) eq ""){
-			
+			if($$checkArg[0] eq ""){
+				die "There is no query in the subroutine '$routineName'.";
+			}else{
+				$query = $$checkArg[0];
+				
+			}
 		}elsif( ref($$checkArg[0]) eq "ARRAY" ){
-			
+			$idRef = $$checkArg[0];
 		}else{
-			
+			die "The arguments of the subroutine '$routineName' is not proper.";
 		}
 	}
 	

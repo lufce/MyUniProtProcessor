@@ -5,15 +5,14 @@ package MyLE;
 use Time::HiRes;
 require "MyProgressBar.pm";
 
-my $species = "mouse";
+my $species = "human";
 our $dataDir = "../data/$species/rev/";
 our $listDir = "../cont_list/$species/rev/";
 ###
 
-&FTOneLiner;
+
 &FTKeyExtractor;
-&FTLipidFeaturesExtractor;
-&GOContentExtractor;
+
 
 ###
 
@@ -349,7 +348,7 @@ sub FTKeyExtractor{
 	
 	$objPB->setAll($DBFilename);
 	
-	open RF, ">$ResultFileName";
+	open RF, ">$ResultFileName" or die "Cannot Create a Result File.";
 	
 	while(<DB>){
 		$objPB->nowAndPrint($.);
