@@ -6,7 +6,7 @@ use Time::HiRes;
 
 require "MyProgressBar.pm";
 
-###é¿çs
+###
 my $resultFileName = "../result/testLocalize.txt";
 my $resultIDRef;
 my $resultRegionsRef;
