@@ -534,28 +534,28 @@ sub CountID{
 }
 
 sub _argumentCheck1{
-	my $checkRef = shift;
+	my $checkArg = shift;
 	my $routineName = shift;
 	
-	my $num = @$checkRef;
+	my $num = @$checkArg;
 	
 	my $query;
 	my $idRef;
 	
 	if($num == 1){
-		if(ref($$checkRef[0]) eq ""){
-			$query = $$checkRef[0];
+		if(ref($$checkArg[0]) eq ""){
+			$query = $$checkArg[0];
 			$idRef = undef;
 		}else{
 			die "The arguments of the subroutine '$routineName' is not proper.";
 		}
 	}elsif($num == 2){
-		if(ref($$checkRef[0]) eq "" and ref($$checkRef[1]) eq "ARRAY"){
-			$query = $$checkRef[0];
-			$idRef = $$checkRef[1];
-		}elsif(ref($$checkRef[1]) eq "" and ref($$checkRef[0]) eq "ARRAY"){
-			$query = $$checkRef[1];
-			$idRef = $$checkRef[0];
+		if(ref($$checkArg[0]) eq "" and ref($$checkArg[1]) eq "ARRAY"){
+			$query = $$checkArg[0];
+			$idRef = $$checkArg[1];
+		}elsif(ref($$checkArg[1]) eq "" and ref($$checkArg[0]) eq "ARRAY"){
+			$query = $$checkArg[1];
+			$idRef = $$checkArg[0];
 		}else{
 			die "The arguments of the subroutine '$routineName' is not proper.";
 		}
@@ -565,4 +565,55 @@ sub _argumentCheck1{
 	if($query eq ""){ die "There is no query in the subroutine '$routineName'."; }
 	
 	return ($query,$idRef,$num);
+}
+
+sub _argumentCheck2{
+	my $checkArg = shift;
+	my $routineName = shift;
+	
+	my $num = @$checkArg;
+	
+	my $query;
+	my $idRef;
+	my $hashRef;
+	my $para;
+	
+	if($num == 0){
+		$query = undef;
+		$idRef = undef
+		$hashRef = undef;
+		$para = undef;
+	}elsif($num == 1){
+		if(ref($$checkArg[0]) eq ""){
+			
+		}elsif( ref($$checkArg[0]) eq "ARRAY" ){
+			
+		}else{
+			
+		}
+	}
+	
+	if($num == 1){
+		if(ref($$checkArg[0]) eq ""){
+			$query = $$checkArg[0];
+			$idRef = undef;
+		}else{
+			die "The arguments of the subroutine '$routineName' is not proper.";
+		}
+	}elsif($num == 2){
+		if(ref($$checkArg[0]) eq "" and ref($$checkArg[1]) eq "ARRAY"){
+			$query = $$checkArg[0];
+			$idRef = $$checkArg[1];
+		}elsif(ref($$checkArg[1]) eq "" and ref($$checkArg[0]) eq "ARRAY"){
+			$query = $$checkArg[1];
+			$idRef = $$checkArg[0];
+		}else{
+			die "The arguments of the subroutine '$routineName' is not proper.";
+		}
+	}else{
+		die "The arguments of the subroutine '$routineName' is not proper.";
+	}
+	if($query eq ""){ die "There is no query in the subroutine '$routineName'."; }
+	
+	return ($para,$hashRef,$query,$idRef,$num);
 }

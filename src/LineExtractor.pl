@@ -1,7 +1,11 @@
 ###uniprot-all.txtÇÃçsêîÇÕÅ@17757632
 
+package MyLE;
+
 use Time::HiRes;
 require "MyProgressBar.pm";
+
+our $dataDir = "../data/human/rev/";
 
 ###
 
@@ -9,7 +13,7 @@ require "MyProgressBar.pm";
 
 ###
 sub AddEndMarker{
-	my $DBFilename ="../data/rev/ID-sq_rev_uniprot-all.txt";
+	my $DBFilename =$MyLE::dataDir."ID-sq_rev_uniprot-all.txt";
 	my $RFilename = "../data/rev/ID-sq_rev_uniprot-all2.txt";
 	
 	my $objPB = new MyProgressBar;
@@ -40,7 +44,7 @@ sub AddEndMarker{
 sub GNDEExtractor{
 	my $startTime = Time::HiRes::time();
 	my $DBFilename = "../data/rev/rev_uniprot-all.txt";	
-	my $ResultFileName = "../data/rev/ID-GNDE_rev_uniprot-all.txt";
+	my $ResultFileName = $MyLE::dataDir."ID-GNDE_rev_uniprot-all2.txt";
 	my $routineName = "GNDEExtractor";
 	
 	print "$routineName starts.\n";

@@ -1,14 +1,7 @@
-my $df = "../data/rev/ID-GNDE_rev_uniprot-all.txt";
-#my $rf = "../result/testcount.txt";
-my $count = 0;
+$aaa = "aaa";
 
-open DF, $df or die;
-open RF, ">../result/testcount.txt";
-
-while(<DF>){
-	$count++;
+if( ref($aaa) eq "" ){
+	print "va";
+}else{
+	print "ref";
 }
-
-print RF $count;
-
-close DF; close RF;
