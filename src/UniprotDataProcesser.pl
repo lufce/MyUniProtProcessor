@@ -568,6 +568,8 @@ sub _argumentCheck1{
 }
 
 sub _argumentCheck2{
+	#return ($para, $hashRef, $idRef, $query, $num)
+	
 	my $checkArg = shift;
 	my $routineName = shift;
 	
@@ -579,19 +581,52 @@ sub _argumentCheck2{
 	my $para;
 	
 	if($num == 0){
-		return $num;
+		return (undef, undef, undef, undef, undef, $num);
 	}elsif($num == 1){
 		if(ref($$checkArg[0]) eq ""){
-			if($$checkArg[0] eq ""){
+			if($$checkArg[0] eq "" or !defined($$checkArg[0])){
 				die "There is no query in the subroutine '$routineName'.";
 			}else{
 				$query = $$checkArg[0];
-				
+				return (undef, undef, undef, undef, $query, $num);
 			}
 		}elsif( ref($$checkArg[0]) eq "ARRAY" ){
 			$idRef = $$checkArg[0];
+			return (undef, undef, undef, $idRef, undef, $num);
 		}else{
 			die "The arguments of the subroutine '$routineName' is not proper.";
+		}
+	}elsif($num == 2){
+		if(ref($$checkArg[0] = "ARRAY")){
+			$idRef = $$checkArg[0];
+			
+			if(ref($$checkArg[1] = "HASH")){
+				$hashRef = $$checkArg[1];
+				return (undef, undef, $hashRef, $idRef, undef, $num);
+			}elsif(ref($$checkArg[1] = "")){
+				if($$checkArg[1] =~ m/-all|-part/i ){
+					$para = $$checkArg[1];
+					
+					return ($para, undef, undef, $idRef, undef, $num);
+				}elsif($$checkArg[1] = ""){
+					die "The arguments of the subroutine '$routineName' is not proper.";
+				}else{
+					$query = $$checkArg[1];
+					
+					return (undef, undef, undef, $idRef, $query, $num);
+				}
+			}
+		}elsif(ref($$checkArg[0] = "HASH")){
+			$hashRef = $$checkArg[0];
+			if(ref($$checkArg[1]) eq "ARRAY"){
+				$idRef = $$checkArg[1];
+				
+				return (undef, undef, $hashRef, $idRef, undef, $num);
+			}else{
+				die "The arguments of the subroutine '$routineName' is not proper."
+			}
+		}else{
+			die "The arguments of the subroutine '$routineName' is not proper."
 		}
 	}
 	
