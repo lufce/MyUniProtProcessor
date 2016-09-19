@@ -568,31 +568,35 @@ sub _argumentCheck1{
 }
 
 sub _argumentCheck2{
-	#return ($para, $hashRef, $idRef, $query, $num)
+	#return ($para, $hashRef, $idRef, $query, $num, $mode)
 	
 	my $checkArg = shift;
 	my $routineName = shift;
 	
 	my $num = @$checkArg;
 	
+	my $mode;
 	my $query;
 	my $idRef;
 	my $hashRef;
 	my $para;
 	
 	if($num == 0){
-		return (undef, undef, undef, undef, undef, $num);
+		$mode = 1;
+		return (undef, undef, undef, undef, undef, $num, $mode);
 	}elsif($num == 1){
 		if(ref($$checkArg[0]) eq ""){
 			if($$checkArg[0] eq "" or !defined($$checkArg[0])){
 				die "There is no query in the subroutine '$routineName'.";
 			}else{
+				$mode = 2;
 				$query = $$checkArg[0];
-				return (undef, undef, undef, undef, $query, $num);
+				return (undef, undef, undef, undef, $query, $num, $mode);
 			}
 		}elsif( ref($$checkArg[0]) eq "ARRAY" ){
+			$mode = 3;
 			$idRef = $$checkArg[0];
-			return (undef, undef, undef, $idRef, undef, $num);
+			return (undef, undef, undef, $idRef, undef, $num, $mode);
 		}else{
 			die "The arguments of the subroutine '$routineName' is not proper.";
 		}
@@ -601,56 +605,125 @@ sub _argumentCheck2{
 			$idRef = $$checkArg[0];
 			
 			if(ref($$checkArg[1] = "HASH")){
-				$hashRef = $$checkArg[1];
-				return (undef, undef, $hashRef, $idRef, undef, $num);
+				die "I need the parameter '-all' or '-part'.";
 			}elsif(ref($$checkArg[1] = "")){
 				if($$checkArg[1] =~ m/-all|-part/i ){
-					$para = $$checkArg[1];
-					
-					return ($para, undef, undef, $idRef, undef, $num);
+					die "I need the hash containing sequence regions.";
 				}elsif($$checkArg[1] = ""){
 					die "The arguments of the subroutine '$routineName' is not proper.";
 				}else{
+					$mode = 4;
 					$query = $$checkArg[1];
 					
-					return (undef, undef, undef, $idRef, $query, $num);
+					return (undef, undef, undef, $idRef, $query, $num, $mode);
 				}
 			}
 		}elsif(ref($$checkArg[0] = "HASH")){
 			$hashRef = $$checkArg[0];
 			if(ref($$checkArg[1]) eq "ARRAY"){
-				$idRef = $$checkArg[1];
-				
-				return (undef, undef, $hashRef, $idRef, undef, $num);
+				die "I need the parameter '-all' or '-part'.";
+			}elsif(ref($$checkArg[1]) eq ""){
+				if($$checkArg[1] =~ m/-all|-part/i ){
+					die "I need the the ID array.";
+				}elsif($$checkArg[1] = ""){
+					die "The arguments of the subroutine '$routineName' is not proper.";
+				}else{
+					$mode = 4;
+					$query = $$checkArg[1];
+					
+					return (undef, undef, undef, $idRef, $query, $num, $mode);
+				}
 			}else{
-				die "The arguments of the subroutine '$routineName' is not proper."
+				die "The arguments of the subroutine '$routineName' is not proper.";
+			}
+		}elsif(ref($$checkArg[0]) eq ""){
+			if($$checkArg[0] =~ m/-all|-part/i){
+				die "The arguments of the subroutine '$routineName' is not proper.";
+			}else{
+				$query = $$checkArg[0];
+				if(ref($$checkArg[1]) eq "ARRAY"){
+					$mode = 4;
+					$idRef = $$checkArg[1];
+					
+					return (undef, undef, undef, $idRef, $query, $num, $mode);
+				}else{
+					die "The arguments of the subroutine '$routineName' is not proper.";
+				}
+			}
+		}elsif($num ==3){
+			if(ref($$checkArg[0]) eq ""){
+				if($$checkArg[0] =~ m/-all|-part/i){
+					$para = $$checkArg[0];
+					if(ref($$checkArg[1]) eq "ARRAY"){
+						$idRef = $$checkArg[1];
+						
+						if(ref($$checkArg[2]) eq "HASH"){
+							$mode = 5;
+							$hashRef = $$checkArg[2];
+							
+							return ($para, undef, undef, $idRef, $query, $num, $mode);
+						}
+					}elsif(ref($$checkArg[1]) eq "HASH"){
+						$hashRef = $$checkArg[1];
+						
+						if(ref($$checkArg[2]) eq "ARRAY"){
+							$mode = 5;
+							$idRef = $$checkArg[2];
+							
+							return ($para, undef, undef, $idRef, $query, $num, $mode);
+						}
+					}else{
+						die "The arguments of the subroutine '$routineName' is not proper.";
+					}
+				}elsif(ref($$checkArg[0]) eq "ARRAY"){
+					$idRef = $$checkArg[0];
+					
+					if(ref($$checkArg[1]) eq "HASH"){
+						$hashRef = $$checkArg[1];
+						
+						if($$checkArg[2] =~ m/-all|-part/i){
+							$mode = 5;
+							$para = $$checkArg[2];
+							
+							return ($para, undef, undef, $idRef, $query, $num, $mode);
+						}
+					}elsif($$checkArg[1] =~ m/-all|-part/i){
+						$para = $$checkArg[1];
+						
+						if(ref($$checkArg[2]) eq "HASH"){
+							$mode = 5;
+							$hashRef = $$checkArg[2];
+							
+							return ($para, undef, undef, $idRef, $query, $num, $mode);
+						}else{
+							die "The arguments of the subroutine '$routineName' is not proper.";
+						}
+					}elsif(ref($$checkArg[0]) eq "HASH"){
+						if($$checkArg[1] =~ m/-all|-part/i){
+							$para = $$checkArg[1];
+						
+							if(ref($$checkArg[2]) eq "ARRAY"){
+								$mode = 5;
+								$idRef = $$checkArg[2];
+								
+								return ($para, undef, undef, $idRef, $query, $num, $mode);
+							}else{
+								die "The arguments of the subroutine '$routineName' is not proper.";
+							}
+						}
+					}else{
+						die "The arguments of the subroutine '$routineName' is not proper.";
+					}
+				}elsif(ref($$checkArg[0]) eq "HASH"){
+					$hashRef = $$checkArg[0];
+				}else{
+					die "The arguments of the subroutine '$routineName' is not proper.";
+				}
 			}
 		}else{
-			die "The arguments of the subroutine '$routineName' is not proper."
+			die "The arguments of the subroutine '$routineName' is not proper.";
 		}
 	}
 	
-	if($num == 1){
-		if(ref($$checkArg[0]) eq ""){
-			$query = $$checkArg[0];
-			$idRef = undef;
-		}else{
-			die "The arguments of the subroutine '$routineName' is not proper.";
-		}
-	}elsif($num == 2){
-		if(ref($$checkArg[0]) eq "" and ref($$checkArg[1]) eq "ARRAY"){
-			$query = $$checkArg[0];
-			$idRef = $$checkArg[1];
-		}elsif(ref($$checkArg[1]) eq "" and ref($$checkArg[0]) eq "ARRAY"){
-			$query = $$checkArg[1];
-			$idRef = $$checkArg[0];
-		}else{
-			die "The arguments of the subroutine '$routineName' is not proper.";
-		}
-	}else{
-		die "The arguments of the subroutine '$routineName' is not proper.";
-	}
-	if($query eq ""){ die "There is no query in the subroutine '$routineName'."; }
-	
-	return ($para,$hashRef,$query,$idRef,$num);
+
 }
