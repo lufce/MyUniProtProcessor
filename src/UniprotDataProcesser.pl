@@ -500,6 +500,94 @@ sub RecNameFullMatch{
 	return @matchedID;
 }
 
+sub _FTFlatFramework{
+	#まだ途中。引数の判定と、連想配列が有った場合の挙動が未実装
+	#need (parentalRoutineName, FTKey, argumentReference)
+	
+	my $searchFilename = "../data/rev/ID-FT_rev_uniprot-allFlat.txt";
+	my $routineName = "FTFLatFramework";
+	my $parentalRoutineName = shift;
+	my $FTKey = shift;		#searching Key in FT Line
+	my $argRef = shift;
+
+	my $mode;		#search mode
+	my $num;		#The number of arguments
+	my $thisId;
+	my $idRef;		#Reference of the array of IDs
+	my $hashRef;	#Reference of the hash of AA sequence regions.
+	my $query;		#asked in FT descriptions.
+	my $para;		#"-all" or "-part".
+	
+	my $objPB = new MyProgressBar;
+	   $objPB -> setAll($searchFilename);
+	
+	my @matchedID;
+	
+	print "$routineName starts.\n";
+	
+	#check arguments
+	$num = @_;
+	if($num != 3){
+		die "Arguments error in $routineName called by $parentalRoutineName.\n";
+	}elsif(!defined($FTKey) or $FTKey = ""){
+		die "Arguments error in $routineName called by $parentalRoutineName.\n";
+	}elsif( !ref($argRef) eq "ARRAY" ){
+		die "Arguments error in $routineName called by $parentalRoutineName.\n";
+	}
+	
+	($para, $hashRef, $idRef, $query, $num, $mode) = &_argumentCheck2($argRef , $routineName);
+	
+	#open database file
+	open DB, $searchFilename;
+	
+	#processor
+	if($num == 1){
+		while(<DB>){
+			$objPB->nowAndPrint($.);
+			
+			if(m/^ID   (.+?) /){
+				$thisId = $1;
+				
+				while(<DB>){
+					$objPB->nowAndPrint($.);
+					if(m/^FT   $FTKey/){
+						push(@matchedID,$thisId);
+						last;
+					}elsif(m/^\/\//){
+						last;
+					}
+				}
+			}
+		}
+	}else{
+		foreach $thisId (@$idRef){
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							push(@matchedID,$thisId);
+							last;
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
+	}
+
+	close DB;
+
+	print "$routineName ends.\n";
+	
+	return \@matchedID;
+}
+
 sub CountID{
 #This routine count the number of ID in a search file.
 
