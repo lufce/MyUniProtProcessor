@@ -581,149 +581,52 @@ sub _argumentCheck2{
 	my $hashRef;
 	my $para;
 	
-	if($num == 0){
-		$mode = 1;
-		return (undef, undef, undef, undef, undef, $num, $mode);
-	}elsif($num == 1){
-		if(ref($$checkArg[0]) eq ""){
-			if($$checkArg[0] eq "" or !defined($$checkArg[0])){
-				die "There is no query in the subroutine '$routineName'.";
+	#sort arguments
+	for(my $i = 0 ; $i < $num ; $i++){
+		if( ref($$checkArg[$i]) eq ""){
+			if( $$checkArg[$i] =~ m/-all|-part/i){
+				$para = $$checkArg[$i];
+				
+			}elsif( $$checkArg[$i] eq "" or !defined($$checkArg[$i])){
+				die "The arguments[$i] of the subroutine '$routineName' is not proper.";
+				
 			}else{
-				$mode = 2;
-				$query = $$checkArg[0];
-				return (undef, undef, undef, undef, $query, $num, $mode);
+				$query = $$checkArg[$i];
+				
 			}
-		}elsif( ref($$checkArg[0]) eq "ARRAY" ){
-			$mode = 3;
-			$idRef = $$checkArg[0];
-			return (undef, undef, undef, $idRef, undef, $num, $mode);
-		}else{
-			die "The arguments of the subroutine '$routineName' is not proper.";
-		}
-	}elsif($num == 2){
-		if(ref($$checkArg[0] = "ARRAY")){
-			$idRef = $$checkArg[0];
+		}elsif( ref($$checkArg[$i]) eq "ARRAY" ){
+			$idRef = $$checkArg[$i];
 			
-			if(ref($$checkArg[1] = "HASH")){
-				die "I need the parameter '-all' or '-part'.";
-			}elsif(ref($$checkArg[1] = "")){
-				if($$checkArg[1] =~ m/-all|-part/i ){
-					die "I need the hash containing sequence regions.";
-				}elsif($$checkArg[1] = ""){
-					die "The arguments of the subroutine '$routineName' is not proper.";
-				}else{
-					$mode = 4;
-					$query = $$checkArg[1];
-					
-					return (undef, undef, undef, $idRef, $query, $num, $mode);
-				}
-			}
-		}elsif(ref($$checkArg[0] = "HASH")){
-			$hashRef = $$checkArg[0];
-			if(ref($$checkArg[1]) eq "ARRAY"){
-				die "I need the parameter '-all' or '-part'.";
-			}elsif(ref($$checkArg[1]) eq ""){
-				if($$checkArg[1] =~ m/-all|-part/i ){
-					die "I need the the ID array.";
-				}elsif($$checkArg[1] = ""){
-					die "The arguments of the subroutine '$routineName' is not proper.";
-				}else{
-					$mode = 4;
-					$query = $$checkArg[1];
-					
-					return (undef, undef, undef, $idRef, $query, $num, $mode);
-				}
-			}else{
-				die "The arguments of the subroutine '$routineName' is not proper.";
-			}
-		}elsif(ref($$checkArg[0]) eq ""){
-			if($$checkArg[0] =~ m/-all|-part/i){
-				die "The arguments of the subroutine '$routineName' is not proper.";
-			}else{
-				$query = $$checkArg[0];
-				if(ref($$checkArg[1]) eq "ARRAY"){
-					$mode = 4;
-					$idRef = $$checkArg[1];
-					
-					return (undef, undef, undef, $idRef, $query, $num, $mode);
-				}else{
-					die "The arguments of the subroutine '$routineName' is not proper.";
-				}
-			}
-		}elsif($num ==3){
-			if(ref($$checkArg[0]) eq ""){
-				if($$checkArg[0] =~ m/-all|-part/i){
-					$para = $$checkArg[0];
-					if(ref($$checkArg[1]) eq "ARRAY"){
-						$idRef = $$checkArg[1];
-						
-						if(ref($$checkArg[2]) eq "HASH"){
-							$mode = 5;
-							$hashRef = $$checkArg[2];
-							
-							return ($para, undef, undef, $idRef, $query, $num, $mode);
-						}
-					}elsif(ref($$checkArg[1]) eq "HASH"){
-						$hashRef = $$checkArg[1];
-						
-						if(ref($$checkArg[2]) eq "ARRAY"){
-							$mode = 5;
-							$idRef = $$checkArg[2];
-							
-							return ($para, undef, undef, $idRef, $query, $num, $mode);
-						}
-					}else{
-						die "The arguments of the subroutine '$routineName' is not proper.";
-					}
-				}elsif(ref($$checkArg[0]) eq "ARRAY"){
-					$idRef = $$checkArg[0];
-					
-					if(ref($$checkArg[1]) eq "HASH"){
-						$hashRef = $$checkArg[1];
-						
-						if($$checkArg[2] =~ m/-all|-part/i){
-							$mode = 5;
-							$para = $$checkArg[2];
-							
-							return ($para, undef, undef, $idRef, $query, $num, $mode);
-						}
-					}elsif($$checkArg[1] =~ m/-all|-part/i){
-						$para = $$checkArg[1];
-						
-						if(ref($$checkArg[2]) eq "HASH"){
-							$mode = 5;
-							$hashRef = $$checkArg[2];
-							
-							return ($para, undef, undef, $idRef, $query, $num, $mode);
-						}else{
-							die "The arguments of the subroutine '$routineName' is not proper.";
-						}
-					}elsif(ref($$checkArg[0]) eq "HASH"){
-						if($$checkArg[1] =~ m/-all|-part/i){
-							$para = $$checkArg[1];
-						
-							if(ref($$checkArg[2]) eq "ARRAY"){
-								$mode = 5;
-								$idRef = $$checkArg[2];
-								
-								return ($para, undef, undef, $idRef, $query, $num, $mode);
-							}else{
-								die "The arguments of the subroutine '$routineName' is not proper.";
-							}
-						}
-					}else{
-						die "The arguments of the subroutine '$routineName' is not proper.";
-					}
-				}elsif(ref($$checkArg[0]) eq "HASH"){
-					$hashRef = $$checkArg[0];
-				}else{
-					die "The arguments of the subroutine '$routineName' is not proper.";
-				}
-			}
+		}elsif( ref($$checkArg[$i]) eq "HASH" ){
+			$hashRef = $$checkArg[$i];
 		}else{
-			die "The arguments of the subroutine '$routineName' is not proper.";
+			die "The arguments[$i] of the subroutine '$routineName' is not proper.";
 		}
 	}
 	
-
+	#define the mode. The difinition of the mode is based on 'ÝŒvˆÄ.docx' .
+	if( $num == 0 ){
+		$mode = 1;
+		
+	}elsif( $num == 1 and defined($idRef)){
+		$mode = 2;
+		
+	}elsif( $num == 1 and defined($query)){
+		$mode = 3;
+		
+	}elsif( $num == 2 and defined($idRef) and defined($query)){
+		$mode = 4;
+		
+	}elsif( $num == 3 and defined($idRef) and defined($hashRef) and defined($para)){
+		$mode = 5;
+		
+	}elsif( $num == 4 and defined($idRef) and defined($hashRef) and defined($query) and defined($para)){
+		$mode = 6;
+	
+	}else{
+		die "Failure of defining the mode in the subroutine $routineName. The number of arguments is $num.";
+	
+	}
+	
+	return ($para, $hashRef, $idRef, $query, $num, $mode);
 }
