@@ -512,11 +512,13 @@ sub _FTFlatFramework{
 
 	my $mode;		#search mode
 	my $num;		#The number of arguments
-	my $thisId;
+	my $query;		#asked in FT descriptions
 	my $idRef;		#Reference of the array of IDs
-	my $hashRef;	#Reference of the hash of AA sequence regions.
-	my $query;		#asked in FT descriptions.
-	my $para;		#"-all" or "-part".
+	my $hashRef;	#Reference of the hash of AA sequence regions
+	my $para;		#"-all" or "-part"
+	
+	my $thisId;
+	my $FTDescription;
 	
 	my $objPB = new MyProgressBar;
 	   $objPB -> setAll($searchFilename);
@@ -541,7 +543,7 @@ sub _FTFlatFramework{
 	open DB, $searchFilename;
 	
 	#processor
-	if($num == 1){
+	if($mode == 1){
 		while(<DB>){
 			$objPB->nowAndPrint($.);
 			
@@ -559,7 +561,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
-	}else{
+	}elsif($mode == 2){
 		foreach $thisId (@$idRef){
 			while(<DB>){
 				$objPB->nowAndPrint($.);
@@ -579,6 +581,57 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+	}elsif($mode == 3){
+		while(<DB>){
+			$objPB->nowAndPrint($.);
+			
+			if(m/^ID   (.+?) /){
+				$thisId = $1;
+				
+				while(<DB>){
+					$objPB->nowAndPrint($.);
+					
+					if(m/^FT   $FTKey/){
+						$FTDescription = substr($_, 34);
+						
+						if($FTDescription =~ m/$query/){
+							push(@matchedID,$thisId);
+							last;	
+						}
+					}elsif(m/^\/\//){
+						last;
+					}
+				}
+			}
+		}
+	}elsif($mode == 4){
+		foreach $thisId (@$idRef){
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							$FTDescription = substr($_, 34);
+							
+							if($FTDescription =~ m/$query/){
+								push(@matchedID,$thisId);
+								last;	
+							}
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
+	}elsif($mode == 5){
+		
+	}elsif($mode == 6){
+		
 	}
 
 	close DB;
