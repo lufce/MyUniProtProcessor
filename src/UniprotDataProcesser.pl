@@ -520,6 +520,12 @@ sub _FTFlatFramework{
 	my $thisId;
 	my $FTDescription;
 	
+	my $p_from;		#the value of 'From' endpoint in FT line
+	my $p_end;		#the value of 'To' endpoint in FT line 
+	my @region;
+	my $regionSize;
+	my $p_region;
+	
 	my $objPB = new MyProgressBar;
 	   $objPB -> setAll($searchFilename);
 	
@@ -628,8 +634,47 @@ sub _FTFlatFramework{
 				}
 			}
 		}
-	}elsif($mode == 5){
-		
+	}elsif($mode == 5 and $para eq "-part"){
+		foreach $thisId (@$idRef){
+			@region = split(",",$$hashRef{$thisId});
+			$regionSize = @region;
+			$p_region = 0;
+			
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							$p_from = substr($_, 14, 6);
+							$p_from =~ tr/ //d;
+							
+							$p_end = substr($_, 21, 6);
+							$p_end =~ tr/ //d;
+							
+							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
+								if($p_from <= $region[$p_region] and $region[$p_region + 1] <= $p_end){
+									push(@matchedID,$thisId);
+									last;
+								}
+							}
+							
+							if($p_region <= $regionSize){
+							#when for-loop is exited using 'last', the value of $p_region 
+							
+							}
+							
+							
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
 	}elsif($mode == 6){
 		
 	}
