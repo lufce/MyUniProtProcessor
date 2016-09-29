@@ -648,11 +648,8 @@ sub _FTFlatFramework{
 						$objPB->nowAndPrint($.);
 						
 						if(m/^FT   $FTKey/){
-							$p_from = substr($_, 14, 6);
-							$p_from =~ tr/ //d;
-							
-							$p_end = substr($_, 21, 6);
-							$p_end =~ tr/ //d;
+							$p_from = &_getFTFrom($_);
+							$p_end = &_getFTTo($_);
 							
 							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
 								if($p_from <= $region[$p_region] and $region[$p_region + 1] <= $p_end){
@@ -717,6 +714,24 @@ sub CountID{
 	print "$routineName ends.\n";
 
 	return $count;
+}
+
+sub _getFTFrom{
+	my $FTLine = shift;
+	
+	my $FTFrom = substr($FTLine, 14, 6);
+	$FTFrom =~ tr/ //d;
+	
+	return $FTFrom;
+}
+
+sub _getFTTo{
+	my $FTLine = shift;
+	
+	my $FTTo = substr($FTLine, 21, 6);
+	$FTTo =~ tr/ //d;
+	
+	return $FTTo;
 }
 
 sub _argumentCheck1{
