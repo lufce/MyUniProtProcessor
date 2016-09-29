@@ -641,6 +641,67 @@ sub _FTFlatFramework{
 	return \@matchedID;
 }
 
+sub _JudgePosition{
+	#judgeMode == 0;  region 1 is included in region 2
+	#judgeMode == 1;  region 1 overlaps region 2 but is not included in region2
+	#judgeMode == 2;  region 1 is out to the N-terminus of region 2
+	#judgeMode == 3;  region 1 is out to the C-terminus of region 2
+	#judgeMode >= 4;  region 1 exchanges region 2 each other
+	
+	my $p_from1 = shift;
+	my $p_to1 = shift;
+	my $p_from2 = shift;
+	my $p_to2 = shift;
+	my $judgeMode = shift;
+	my $buf;
+	
+	if($p_from1 !~ m/^[0-9]$/ or $p_from2 !~ m/^[0-9]$/ or $p_to1 !~ m/^[0-9]$/ or $p_to2 !~ m/^[0-9]$/){
+		die "pointer is not numeric";	
+	}
+	
+	if(3 < $judgeMode and $judgeMode < 8){
+		$buf = $p_from1;
+		$p_from1 = $p_from2;
+		$p_from2 = $buf;
+		
+		$buf = $p_to1;
+		$p_to1 = $p_to2;
+		$p_to2 = $buf;
+		
+		$judgeMode = $judgeMode % 4;
+	}else{
+		die "judgeMode is $judgeMode";
+	}
+	
+	if($judgeMode == 0){
+		if($p_from2 <= $p_from1 and $p_to1 <= $p_to2){
+			return 1;
+		}else{
+			return 0;
+		}
+	}elsif($judgeMode == 1){
+		if($p_from2 <= $p_to1 or $p_from1 <= $p_to2){
+			return 1;
+		}else{
+			return 0;
+		}
+	}elsif($judgeMode == 2){
+		if($p_to1 < $p_from2){
+			return 1;
+		}else{
+			return 0;
+		}
+	}elsif($judgeMode == 3){
+		if($p_to2 < $p_from1){
+			return 1;
+		}else{
+			return 0;
+		}
+	}else{
+		die;
+	}
+}
+
 sub CountID{
 #This routine count the number of ID in a search file.
 
