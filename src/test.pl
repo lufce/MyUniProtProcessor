@@ -1,4 +1,12 @@
-my $ft = "FT   MOD_RES     106    106       Nitrated tyrosine. {ECO:0000250|UniProtKB:Q9CQV8}.";
-my $dc = substr($ft, 34);
+my %hs = (A => "1,2,3", B => "4,5,6");
 
-print $dc;
+&test(\%hs);
+
+sub test{
+	$hashRef = shift;
+	my $res;
+	
+	my @region = split(",",$$hashRef{A});
+	$res = @region;
+	print $res;
+}

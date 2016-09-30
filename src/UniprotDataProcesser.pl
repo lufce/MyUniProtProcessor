@@ -520,6 +520,12 @@ sub _FTFlatFramework{
 	my $thisId;
 	my $FTDescription;
 	
+	my $p_from;		#the value of 'From' endpoint in FT line
+	my $p_end;		#the value of 'To' endpoint in FT line 
+	my @region;
+	my $regionSize;
+	my $p_region;
+	
 	my $objPB = new MyProgressBar;
 	   $objPB -> setAll($searchFilename);
 	
@@ -628,8 +634,44 @@ sub _FTFlatFramework{
 				}
 			}
 		}
-	}elsif($mode == 5){
-		
+	}elsif($mode == 5 and $para eq "-part"){
+		foreach $thisId (@$idRef){
+			@region = split(",",$$hashRef{$thisId});
+			$regionSize = @region;
+			$p_region = 0;
+			
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							$p_from = &_getFTFrom($_);
+							$p_end = &_getFTTo($_);
+							
+							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
+								if($p_from <= $region[$p_region] and $region[$p_region + 1] <= $p_end){
+									push(@matchedID,$thisId);
+									last;
+								}
+							}
+							
+							if($p_region <= $regionSize){
+							#when for-loop is exited using 'last', the value of $p_region 
+							
+							}
+							
+							
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
 	}elsif($mode == 6){
 		
 	}
@@ -733,6 +775,24 @@ sub CountID{
 	print "$routineName ends.\n";
 
 	return $count;
+}
+
+sub _getFTFrom{
+	my $FTLine = shift;
+	
+	my $FTFrom = substr($FTLine, 14, 6);
+	$FTFrom =~ tr/ //d;
+	
+	return $FTFrom;
+}
+
+sub _getFTTo{
+	my $FTLine = shift;
+	
+	my $FTTo = substr($FTLine, 21, 6);
+	$FTTo =~ tr/ //d;
+	
+	return $FTTo;
 }
 
 sub _argumentCheck1{
