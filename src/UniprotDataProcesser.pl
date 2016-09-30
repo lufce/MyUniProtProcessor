@@ -502,13 +502,21 @@ sub RecNameFullMatch{
 
 sub _FTFlatFramework{
 	#まだ途中。引数の判定と、連想配列が有った場合の挙動が未実装
-	#need (parentalRoutineName, FTKey, argumentReference)
+	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
+	
+	#judgeMode == 0;  FT region is included in region of interest
+	#judgeMode == 1;  FT region overlaps region of interest and is included in region2
+	#judgeMode == 2;  FT region is out to the N-terminus of region of interest
+	#judgeMode == 3;  FT region is out to the C-terminus of region of interest
+	#judgeMode >= 4;  FT region exchanges region of interest each other. 
+	#				  a new judgeMode is the remainder of the value of judgeMode devided by 4
 	
 	my $searchFilename = "../data/rev/ID-FT_rev_uniprot-allFlat.txt";
 	my $routineName = "FTFLatFramework";
 	my $parentalRoutineName = shift;
 	my $FTKey = shift;		#searching Key in FT Line
 	my $argRef = shift;
+	my $judgeMode = shift;
 
 	my $mode;		#search mode
 	my $num;		#The number of arguments
@@ -652,7 +660,7 @@ sub _FTFlatFramework{
 							$p_end = &_getFTTo($_);
 							
 							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
-								if($p_from <= $region[$p_region] and $region[$p_region + 1] <= $p_end){
+								if(&_JudgePosition($p_from, $p_end, $region[$p_region], $region[$p_region], $judgeMode)){
 									push(@matchedID,$thisId);
 									last;
 								}
@@ -685,10 +693,11 @@ sub _FTFlatFramework{
 
 sub _JudgePosition{
 	#judgeMode == 0;  region 1 is included in region 2
-	#judgeMode == 1;  region 1 overlaps region 2 but is not included in region2
+	#judgeMode == 1;  region 1 overlaps region 2 and is included in region2
 	#judgeMode == 2;  region 1 is out to the N-terminus of region 2
 	#judgeMode == 3;  region 1 is out to the C-terminus of region 2
 	#judgeMode >= 4;  region 1 exchanges region 2 each other
+	#				  a new judgeMode is the remainder of the value of judgeMode devided by 4
 	
 	my $p_from1 = shift;
 	my $p_to1 = shift;
