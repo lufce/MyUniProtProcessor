@@ -33,25 +33,7 @@ close RF;
 
 print "finish";
 
-=pod
-my $ResultFile = "TestResult.txt";
-my $length;
-
-open RF, ">$ResultFile";
-
-my @motifID = &RecNameFullMatch('C.+?orf');
-my @RecName = &ID_to_RecName(\@motifID);
-
-$length = @RecName;
-
-for(my $i = 0 ; $i < $length ; $i++){
-	print RF "ID   $motifID[$i]\n$RecName[$i]";
-}
-
-close RF;
-=cut
-
-###
+#######################################
 
 sub ID_to_RecName{
 #This routine translates ID array into RecName array.
@@ -101,74 +83,15 @@ sub ID_to_RecName{
 }
 
 sub isTransmembrane{
-	#まだ途中。引数の判定と、連想配列が有った場合の挙動が未実装
-	
-	my $searchFilename = "../data/rev/ID-FT_rev_uniprot-allFlat.txt";
 	my $routineName = "isTransmembrane";
 
-	my $num;		#The number of arguments
-	my $thisId;
-	my $idRef;		#Reference of the array of ID
-	my $query;		#Keyword of localization
-	
-	my $objPB = new MyProgressBar;
-	   $objPB -> setAll($searchFilename);
-	
-	my @matchedID;
-	
-	#check arguments
-	#($query,$idRef,$num) = &_argumentCheck1(\@_ , $routineName);
-	$num=1;
-	
 	print "$routineName starts.\n";
-	
-	open DB, $searchFilename;
 
-	if($num == 1){
-		while(<DB>){
-			$objPB->nowAndPrint($.);
-			
-			if(m/^ID   (.+?) /){
-				$thisId = $1;
-				
-				while(<DB>){
-					$objPB->nowAndPrint($.);
-					if(m/^FT   TRANSMEM/){
-						push(@matchedID,$thisId);
-						last;
-					}elsif(m/^\/\//){
-						last;
-					}
-				}
-			}
-		}
-	}else{
-		foreach $thisId (@$idRef){
-			while(<DB>){
-				$objPB->nowAndPrint($.);
-				
-				if(m/$thisId/){
-					while(<DB>){
-						$objPB->nowAndPrint($.);
-						
-						if(m/^FT   TRANSMEM/){
-							push(@matchedID,$thisId);
-							last;
-						}elsif(m/^\/\//){
-							last;
-						}
-					}
-					last;
-				}
-			}
-		}
-	}
-
-	close DB;
+	my $matchedIDref = &_FTFlatFramework($routineName,'TRANSMEM',\@_,5);	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
 
 	print "$routineName ends.\n";
 	
-	return \@matchedID;
+	return $matchedIDref;
 }
 
 sub SLMatch{
@@ -545,19 +468,20 @@ sub _FTFlatFramework{
 	#judgeMode >= 5;  FT region exchanges region of interest each other. 
 	#				  a new judgeMode is the remainder of the value of judgeMode devided by 5
 	
-	my $searchFilename = "../data/rev/ID-FT_rev_uniprot-allFlat.txt";
+	my $searchFilename = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
 	my $routineName = "FTFLatFramework";
-	my $parentalRoutineName = shift;
-	my $FTKey = shift;		#searching Key in FT Line
-	my $argRef = shift;
-	my $judgeMode = shift;
 
 	my $mode;		#search mode
-	my $num;		#The number of arguments
+	my $num = @_;	#The number of arguments
 	my $query;		#asked in FT descriptions
 	my $idRef;		#Reference of the array of IDs
 	my $hashRef;	#Reference of the hash of AA sequence regions
 	my $para;		#"-all" or "-part"
+	
+	my $parentalRoutineName = shift;
+	my $FTKey = shift;		#searching Key in FT Line
+	my $argRef = shift;
+	my $judgeMode = shift;
 	
 	my $thisId;
 	my $FTDescription;
@@ -575,22 +499,23 @@ sub _FTFlatFramework{
 	
 	my @matchedID;
 	
-	print "$routineName starts.\n";
+	print "$routineName starts.";
 	
 	#check arguments
-	$num = @_;
-	if($num != 3){
-		die "Arguments error in $routineName called by $parentalRoutineName.\n";
-	}elsif(!defined($FTKey) or $FTKey = ""){
-		die "Arguments error in $routineName called by $parentalRoutineName.\n";
+	if($num != 4){
+		die "Arguments error in $routineName called by $parentalRoutineName. ";
+	}elsif(!defined($FTKey) or $FTKey eq ""){
+		die "Arguments error in $routineName called by $parentalRoutineName. ";
 	}elsif( !ref($argRef) eq "ARRAY" ){
-		die "Arguments error in $routineName called by $parentalRoutineName.\n";
+		die "Arguments error in $routineName called by $parentalRoutineName. ";
 	}
 	
 	($para, $hashRef, $idRef, $query, $num, $mode) = &_argumentCheck2($argRef , $routineName);
 	
+	print " Mode is $mode.\n";
+	
 	#open database file
-	open DB, $searchFilename;
+	open DB, $searchFilename or die($!);
 	
 	#processor
 	if($mode == 1){
@@ -611,6 +536,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 2){
 		foreach $thisId (@$idRef){
 			while(<DB>){
@@ -631,6 +557,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 3){
 		while(<DB>){
 			$objPB->nowAndPrint($.);
@@ -654,6 +581,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 4){
 		foreach $thisId (@$idRef){
 			while(<DB>){
@@ -678,6 +606,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 5 and $para eq "-part"){
 		foreach $thisId (@$idRef){
 			@region = split(",",$$hashRef{$thisId});
@@ -715,6 +644,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 5 and $para eq "-all"){
 		foreach $thisId (@$idRef){
 			@region = split(",",$$hashRef{$thisId});
@@ -759,6 +689,7 @@ sub _FTFlatFramework{
 				}
 			}
 		}
+		
 	}elsif($mode == 6 and $para eq "-part"){
 		foreach $thisId (@$idRef){
 			@region = split(",",$$hashRef{$thisId});
@@ -802,7 +733,8 @@ sub _FTFlatFramework{
 					last;
 				}
 			}
-		}	
+		}
+		
 	}elsif($mode == 6 and $para eq "-all"){
 		foreach $thisId (@$idRef){
 			@region = split(",",$$hashRef{$thisId});
