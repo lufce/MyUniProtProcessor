@@ -500,16 +500,50 @@ sub RecNameFullMatch{
 	return @matchedID;
 }
 
+sub CountID{
+#This routine count the number of ID in a search file.
+
+	my $searchFilename = shift;
+	my $routineName = "CountID";
+	
+	my $count=0;
+	my $objPB = new MyProgressBar;
+	my @matchedID  =();
+	
+	print "$routineName starts.\n";
+	
+	$objPB -> setAll($searchFilename);
+	
+	if(!-e $searchFilename){ die "No search file."}
+	
+	open DB, $searchFilename;
+	
+	while(<DB>){
+		$objPB -> countUp; $objPB -> printProgressBar;
+		
+		if(m/^ID/){
+			$count++;
+		}
+	}
+
+	close DB;
+
+	print "$routineName ends.\n";
+
+	return $count;
+}
+
 sub _FTFlatFramework{
-	#まだ途中。引数の判定と、連想配列が有った場合の挙動が未実装
+	#テストランがまだ
 	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
 	
 	#judgeMode == 0;  FT region is included in region of interest
 	#judgeMode == 1;  FT region overlaps region of interest and is included in region2
 	#judgeMode == 2;  FT region is out to the N-terminus of region of interest
 	#judgeMode == 3;  FT region is out to the C-terminus of region of interest
-	#judgeMode >= 4;  FT region exchanges region of interest each other. 
-	#				  a new judgeMode is the remainder of the value of judgeMode devided by 4
+	#judgeMode == 4;  Both regions do not overlap.
+	#judgeMode >= 5;  FT region exchanges region of interest each other. 
+	#				  a new judgeMode is the remainder of the value of judgeMode devided by 5
 	
 	my $searchFilename = "../data/rev/ID-FT_rev_uniprot-allFlat.txt";
 	my $routineName = "FTFLatFramework";
@@ -533,6 +567,8 @@ sub _FTFlatFramework{
 	my @region;
 	my $regionSize;
 	my $p_region;
+	my $matchCount;	#this is used when $para is "-all"
+	my @matchRegion;
 	
 	my $objPB = new MyProgressBar;
 	   $objPB -> setAll($searchFilename);
@@ -646,7 +682,6 @@ sub _FTFlatFramework{
 		foreach $thisId (@$idRef){
 			@region = split(",",$$hashRef{$thisId});
 			$regionSize = @region;
-			$p_region = 0;
 			
 			while(<DB>){
 				$objPB->nowAndPrint($.);
@@ -667,10 +702,10 @@ sub _FTFlatFramework{
 							}
 							
 							if($p_region <= $regionSize){
-							#when for-loop is exited using 'last', the value of $p_region 
-							
+							#when for-loop is exited using 'last', the value of $p_region is less than ($regionSize + 2) and next ID should be judged.
+							#when $p_region is ($regionSize + 2), next FT Line should be judged.
+								last;
 							}
-							
 							
 						}elsif(m/^\/\//){
 							last;
@@ -680,8 +715,145 @@ sub _FTFlatFramework{
 				}
 			}
 		}
-	}elsif($mode == 6){
-		
+	}elsif($mode == 5 and $para eq "-all"){
+		foreach $thisId (@$idRef){
+			@region = split(",",$$hashRef{$thisId});
+			$regionSize = @region;
+			$matchCount = 0;
+			
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							$p_from = &_getFTFrom($_);
+							$p_end = &_getFTTo($_);
+							
+							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
+								
+								if($matchRegion[$p_region/2]){
+								#if the region has already matched, judge the next region.
+									next;
+								}
+								
+								if(&_JudgePosition($p_from, $p_end, $region[$p_region], $region[$p_region], $judgeMode)){
+									$matchCount++;
+									last;
+								}
+							}
+							
+							if($matchCount == $regionSize / 2 ){
+							#if all regions are matched
+								push(@matchedID, $thisId);
+								last;
+							}
+							
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
+	}elsif($mode == 6 and $para eq "-part"){
+		foreach $thisId (@$idRef){
+			@region = split(",",$$hashRef{$thisId});
+			$regionSize = @region;
+			
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							
+							$FTDescription = substr($_, 34);
+							
+							if($FTDescription !~ m/$query/){
+								next;	
+							}
+							
+							$p_from = &_getFTFrom($_);
+							$p_end = &_getFTTo($_);
+							
+							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
+								if(&_JudgePosition($p_from, $p_end, $region[$p_region], $region[$p_region], $judgeMode)){
+									push(@matchedID,$thisId);
+									last;
+								}
+							}
+							
+							if($p_region <= $regionSize){
+							#when for-loop is exited using 'last', the value of $p_region is less than ($regionSize + 2) and next ID should be judged.
+							#when $p_region is ($regionSize + 2), next FT Line should be judged.
+								last;
+							}
+							
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}	
+	}elsif($mode == 6 and $para eq "-all"){
+		foreach $thisId (@$idRef){
+			@region = split(",",$$hashRef{$thisId});
+			$regionSize = @region;
+			$matchCount = 0;
+			
+			while(<DB>){
+				$objPB->nowAndPrint($.);
+				
+				if(m/$thisId/){
+					while(<DB>){
+						$objPB->nowAndPrint($.);
+						
+						if(m/^FT   $FTKey/){
+							
+							$FTDescription = substr($_, 34);
+							
+							if($FTDescription !~ m/$query/){
+								next;	
+							}
+							
+							$p_from = &_getFTFrom($_);
+							$p_end = &_getFTTo($_);
+							
+							for ($p_region = 0; $p_region < $regionSize; $p_region += 2){
+								
+								if($matchRegion[$p_region/2]){
+								#if the region has already matched, judge the next region.
+									next;
+								}
+								
+								if(&_JudgePosition($p_from, $p_end, $region[$p_region], $region[$p_region], $judgeMode)){
+									$matchCount++;
+									last;
+								}
+							}
+							
+							if($matchCount == $regionSize / 2 ){
+							#if all regions are matched
+								push(@matchedID, $thisId);
+								last;
+							}
+							
+						}elsif(m/^\/\//){
+							last;
+						}
+					}
+					last;
+				}
+			}
+		}
 	}
 
 	close DB;
@@ -696,8 +868,9 @@ sub _JudgePosition{
 	#judgeMode == 1;  region 1 overlaps region 2 and is included in region2
 	#judgeMode == 2;  region 1 is out to the N-terminus of region 2
 	#judgeMode == 3;  region 1 is out to the C-terminus of region 2
-	#judgeMode >= 4;  region 1 exchanges region 2 each other
-	#				  a new judgeMode is the remainder of the value of judgeMode devided by 4
+	#judgeMode == 4;  Both regions do not overlap.
+	#judgeMode >= 5;  region 1 exchanges region 2 each other
+	#				  a new judgeMode is the remainder of the value of judgeMode devided by 5
 	
 	my $p_from1 = shift;
 	my $p_to1 = shift;
@@ -710,7 +883,7 @@ sub _JudgePosition{
 		die "pointer is not numeric";	
 	}
 	
-	if(3 < $judgeMode and $judgeMode < 8){
+	if(4 < $judgeMode and $judgeMode < 10){
 		$buf = $p_from1;
 		$p_from1 = $p_from2;
 		$p_from2 = $buf;
@@ -719,7 +892,7 @@ sub _JudgePosition{
 		$p_to1 = $p_to2;
 		$p_to2 = $buf;
 		
-		$judgeMode = $judgeMode % 4;
+		$judgeMode = $judgeMode % 5;
 	}else{
 		die "judgeMode is $judgeMode";
 	}
@@ -748,42 +921,15 @@ sub _JudgePosition{
 		}else{
 			return 0;
 		}
+	}elsif($judgeMode == 4){
+		if($p_to1 < $p_from2 or $p_to2 < $p_from1){
+			return 1;
+		}else{
+			return 0;
+		}
 	}else{
 		die;
 	}
-}
-
-sub CountID{
-#This routine count the number of ID in a search file.
-
-	my $searchFilename = shift;
-	my $routineName = "CountID";
-	
-	my $count=0;
-	my $objPB = new MyProgressBar;
-	my @matchedID  =();
-	
-	print "$routineName starts.\n";
-	
-	$objPB -> setAll($searchFilename);
-	
-	if(!-e $searchFilename){ die "No search file."}
-	
-	open DB, $searchFilename;
-	
-	while(<DB>){
-		$objPB -> countUp; $objPB -> printProgressBar;
-		
-		if(m/^ID/){
-			$count++;
-		}
-	}
-
-	close DB;
-
-	print "$routineName ends.\n";
-
-	return $count;
 }
 
 sub _getFTFrom{
