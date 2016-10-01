@@ -15,8 +15,8 @@ my $num2;
 my $i;
 
 
-#$resultIDRef = &GO_C_Match('cilium|flagellum|cilia|flagella');
-$resultIDRef = &isTransmembrane();
+$resultIDRef = &GO_C_Match('cilium|flagellum|cilia|flagella');
+$resultIDRef = &isLipidated("S-palmitoyl",$resultIDRef);
 #$resultIDRef = &ProteinMotifMatchWithRegions('[KRQ]V.P.',$resultIDRef);
 
 $num = @$resultIDRef;
@@ -38,22 +38,22 @@ print "finish";
 sub ID_to_RecName{
 #This routine translates ID array into RecName array.
 
-	my $RefFilename = "../data/rev/ID-GNDE_rev_uniprot-all.txt";
+	my $RefFilename = "../data/human/rev/ID-GNDE_rev_uniprot-all.txt";
 	my @RecName;
 	my $routineName = "ID_to_RecName";
 	
-	my $id = shift;
+	my $idRef = shift;
 	my $objPB = new MyProgressBar;
 	   $objPB->setAll($RefFilename);
 	
 	#if ID is not entered, kill the script.
-	unless(defined($id)){ die "ID is not entered in $routineName"; }
+	unless(defined($idRef)){ die "ID is not entered in $routineName"; }
 
 	print "$routineName starts.\n";
 
 	open DB, $RefFilename;
 	
-	foreach my $thisId (@$id){
+	foreach my $thisId (@$idRef){
 		while(<DB>){
 			$objPB->nowAndPrint($.);
 			
@@ -84,10 +84,24 @@ sub ID_to_RecName{
 
 sub isTransmembrane{
 	my $routineName = "isTransmembrane";
+	my $FTKey = "TRANSMEM";
 
 	print "$routineName starts.\n";
 
-	my $matchedIDref = &_FTFlatFramework($routineName,'TRANSMEM',\@_,5);	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
+	my $matchedIDref = &_FTFlatFramework($routineName,$FTKey,\@_,5);	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
+
+	print "$routineName ends.\n";
+	
+	return $matchedIDref;
+}
+
+sub isLipidated{
+	my $routineName = "isLipidated";
+	my $FTKey = "LIPID";
+
+	print "$routineName starts.\n";
+
+	my $matchedIDref = &_FTFlatFramework($routineName,$FTKey,\@_,5);	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
 
 	print "$routineName ends.\n";
 	
@@ -95,7 +109,7 @@ sub isTransmembrane{
 }
 
 sub SLMatch{
-	my $SerchFileName = "../data/rev/ID-SL_rev_uniprot-allT5.txt";
+	my $SearchFileName = "../data/human/rev/ID-SL_rev_uniprot-allT5.txt";
 	my $routineName = "SLMatch";
 	
 	my $num;		#The number of arguments
@@ -106,14 +120,14 @@ sub SLMatch{
 	my @matchedID;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB->setAll($SerchFileName);
+	   $objPB->setAll($SearchFileName);
 	
 	print "$routineName starts.\n";
 	
 	#check arguments
 	($query,$idRef,$num) = &_argumentCheck1(\@_ , $routineName);
 
-	open DB, $SerchFileName;
+	open DB, $SearchFileName or die($!);
 
 	if($num == 1){
 		while(<DB>){
@@ -161,7 +175,7 @@ sub SLMatch{
 }
 
 sub GO_C_Match{
-	my $SerchFileName = "../data/rev/ID-GO_rev_uniprot-all.txt";
+	my $SearchFileName = "../data/human/rev/ID-GO_rev_uniprot-all.txt";
 	my $routineName = "GO_C_Match";
 	
 	my $num;		#The number of arguments
@@ -172,14 +186,14 @@ sub GO_C_Match{
 	my @matchedID;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB->setAll($SerchFileName);
+	   $objPB->setAll($SearchFileName);
 	
 	print "$routineName starts.\n";
 	
 	#check arguments
 	($query,$idRef,$num) = &_argumentCheck1(\@_ , $routineName);
 	
-	open DB, $SerchFileName;
+	open DB, $SearchFileName or die($!);
 
 	if($num == 1){
 		while(<DB>){
@@ -233,7 +247,7 @@ sub GO_C_Match{
 }
 
 sub ProteinMotifMatch{
-	my $searchFilename = "../data/rev/ID-sq_rev_uniprot-all.txt";
+	my $SearchFileName = "../data/human/rev/ID-sq_rev_uniprot-all.txt";
 	my $routineName = "ProteinMotifMatch";
 
 	my $num;		#The number of arguments
@@ -244,7 +258,7 @@ sub ProteinMotifMatch{
 	my $sequence;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB -> setAll($searchFilename);
+	   $objPB -> setAll($SearchFileName);
 	
 	my @matchedID;
 	
@@ -253,7 +267,7 @@ sub ProteinMotifMatch{
 	
 	print "$routineName starts.\n";
 	
-	open DB, $searchFilename;
+	open DB, $SearchFileName;
 
 	if($num == 1){
 		while(<DB>){
@@ -294,7 +308,7 @@ sub ProteinMotifMatch{
 }
 
 sub ProteinMotifMatchWithRegions{
-	my $searchFilename = "../data/rev/ID-sq_rev_uniprot-all.txt";
+	my $SearchFileName = "../data/human/rev/ID-sq_rev_uniprot-all.txt";
 	my $routineName = "ProteinMotifMatch";
 
 	my $num;		#The number of arguments
@@ -305,7 +319,7 @@ sub ProteinMotifMatchWithRegions{
 	my $sequence;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB -> setAll($searchFilename);
+	   $objPB -> setAll($SearchFileName);
 	
 	my @matchedID;
 	my %matchedRegions;
@@ -316,7 +330,7 @@ sub ProteinMotifMatchWithRegions{
 	
 	print "$routineName starts.\n";
 	
-	open DB, $searchFilename;
+	open DB, $SearchFileName;
 
 	if($num == 1){
 		while(<DB>){
@@ -379,7 +393,7 @@ sub ProteinMotifMatchWithRegions{
 sub RecNameFullMatch{
 #This routine searches the region "RecName Full=" for a query of a regular expression.
 
-	my $searchFilename = "../data/rev/ID-GNDE_rev_uniprot-all.txt";
+	my $SearchFileName = "../data/human/rev/ID-GNDE_rev_uniprot-all.txt";
 	my $routineName = "RecNameFullMatch";
 	
 	#get the query
@@ -388,7 +402,7 @@ sub RecNameFullMatch{
 	my $id;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB -> setAll($searchFilename);
+	   $objPB -> setAll($SearchFileName);
 	
 	my @matchedID  =();
 	
@@ -397,7 +411,7 @@ sub RecNameFullMatch{
 	
 	print "$routineName starts.\n";
 	
-	open DB, $searchFilename;
+	open DB, $SearchFileName;
 	
 	while(<DB>){
 		$objPB -> countUp; $objPB -> printProgressBar;
@@ -426,7 +440,7 @@ sub RecNameFullMatch{
 sub CountID{
 #This routine count the number of ID in a search file.
 
-	my $searchFilename = shift;
+	my $SearchFileName = shift;
 	my $routineName = "CountID";
 	
 	my $count=0;
@@ -435,11 +449,11 @@ sub CountID{
 	
 	print "$routineName starts.\n";
 	
-	$objPB -> setAll($searchFilename);
+	$objPB -> setAll($SearchFileName);
 	
-	if(!-e $searchFilename){ die "No search file."}
+	if(!-e $SearchFileName){ die "No search file."}
 	
-	open DB, $searchFilename;
+	open DB, $SearchFileName;
 	
 	while(<DB>){
 		$objPB -> countUp; $objPB -> printProgressBar;
@@ -468,7 +482,7 @@ sub _FTFlatFramework{
 	#judgeMode >= 5;  FT region exchanges region of interest each other. 
 	#				  a new judgeMode is the remainder of the value of judgeMode devided by 5
 	
-	my $searchFilename = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
+	my $SerchFileName = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
 	my $routineName = "FTFLatFramework";
 
 	my $mode;		#search mode
@@ -495,7 +509,7 @@ sub _FTFlatFramework{
 	my @matchRegion;
 	
 	my $objPB = new MyProgressBar;
-	   $objPB -> setAll($searchFilename);
+	   $objPB -> setAll($SerchFileName);
 	
 	my @matchedID;
 	
@@ -515,7 +529,7 @@ sub _FTFlatFramework{
 	print " Mode is $mode.\n";
 	
 	#open database file
-	open DB, $searchFilename or die($!);
+	open DB, $SerchFileName or die($!);
 	
 	#processor
 	if($mode == 1){
