@@ -31,9 +31,55 @@ for ($i = 0; $i < $num; $i++){
 
 close RF;
 
+&ID_to_AllContents($resultIDRef);
+
 print "finish";
 
 #######################################
+
+sub ID_to_AllContents{
+#This routine translates ID array into all contents of the entry.
+#Exceptionally, this routine outputs new file.
+
+	my $RefFilename = "../data/human/rev/rev_uniprot-all.txt";
+	my $ResultFileName = "../result/AllContentsResult.txt";
+	my $routineName = "ID_to_AllContents";
+	
+	my $idRef = shift;
+	
+	print "$routineName starts.\n";
+
+	my $objPB = new MyProgressBar;
+	   $objPB->setAll($RefFilename);
+	
+	#if ID is not entered, kill the script.
+	unless(defined($idRef)){ die "ID is not entered in $routineName"; }
+
+	open DB, $RefFilename;
+	open RF, ">$ResultFileName";
+	
+	foreach my $thisId (@$idRef){
+		while(<DB>){
+			$objPB->nowAndPrint($.);
+			
+			if(m/$thisId/){
+				print RF;
+				
+				while(<DB>){
+					unless(/^\/\//){print RF;}
+					else{print RF; last;}
+				}
+				last;
+			}
+		}
+	}
+	
+	close DB;
+	close RF;
+	
+	print "$routineName ends.\n";
+
+}
 
 sub ID_to_RecName{
 #This routine translates ID array into RecName array.

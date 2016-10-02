@@ -1,16 +1,19 @@
-sub test1{
-	my @id = (1,2,3);
-	print "@id in subroutine test1\n";	
-	return \@id;
+my $RefFilename = "../data/human/rev/ID-GNDE_rev_uniprot-all.txt";
+my $routineName = "ID_to_AllContents";
+
+print "$routineName starts.\n";
+
+
+open DB, $RefFilename;
+
+
+while(<DB>){
+	unless(/^\/\//){print;}
+	else{print; last;}
 }
 
-sub test2{
-	my $id2 = shift;
-	
-	print "@$id2 in subroutin test2\n";
-}
 
-my $idp = &test1;
-&test2($idp);
 
-print "@$idp in parental routin\n";
+close DB;
+
+print "$routineName ends.\n";
