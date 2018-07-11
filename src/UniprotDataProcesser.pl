@@ -16,8 +16,8 @@ my $i;
 
 
 $resultIDRef = &GO_C_Match('cilium|flagellum|cilia|flagella');
-$resultIDRef = &isLipidated("S-palmitoyl",$resultIDRef);
-#$resultIDRef = &ProteinMotifMatchWithRegions('[KRQ]V.P.',$resultIDRef);
+#$resultIDRef = &isLipidated("S-palmitoyl",$resultIDRef);
+$resultIDRef = &ProteinMotifMatchWithRegions('[ST]P',$resultIDRef);
 
 $num = @$resultIDRef;
 
