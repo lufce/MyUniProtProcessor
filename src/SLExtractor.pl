@@ -1,4 +1,4 @@
-package MySLE;
+﻿package MySLE;
 
 use Time::HiRes;
 require "MyProgressBar.pm";

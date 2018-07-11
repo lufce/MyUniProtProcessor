@@ -1,4 +1,4 @@
-###uniprot-all.txt�̍s���́@17757632
+﻿###uniprot-all.txtの行数は　17757632
 
 package MyLE;
 

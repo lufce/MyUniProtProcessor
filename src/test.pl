@@ -1,4 +1,4 @@
-my $RefFilename = "../data/human/rev/ID-GNDE_rev_uniprot-all.txt";
+﻿my $RefFilename = "../data/human/rev/ID-GNDE_rev_uniprot-all.txt";
 my $routineName = "ID_to_AllContents";
 
 print "$routineName starts.\n";

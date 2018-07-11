@@ -1,45 +1,45 @@
-#160812		ver0.1		ì‚èŽn‚ß
+ï»¿#160812		ver0.1		ä½œã‚Šå§‹ã‚
 
 use strict;
 use warnings;
 use Time::HiRes;
 
-###ƒTƒuƒ‹[ƒ`ƒ“
+###ã‚µãƒ–ãƒ«ãƒ¼ãƒãƒ³
 
 sub getExecutionDate(){
-	my @youbi = ('“ú', 'ŒŽ', '‰Î', '…', '–Ø', '‹à', '“y');
+	my @youbi = ('æ—¥', 'æœˆ', 'ç«', 'æ°´', 'æœ¨', 'é‡‘', 'åœŸ');
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime time;
 	$year +=1900;
 	$mon += 1;
-	return "$year”N$monŒŽ$mday“ú($youbi[$wday]) $hourŽž$min•ª$sec•b";
+	return "$yearå¹´$monæœˆ$mdayæ—¥($youbi[$wday]) $houræ™‚$minåˆ†$secç§’";
 }
 
-###•Ï”
+###å¤‰æ•°
 my $startTime = Time::HiRes::time();
 
-my $DBFilename = "uniprot-all.fasta";	#ƒ^ƒ“ƒpƒNŽ¿‚Ì”z—ñ‚ðŠÜ‚ñ‚¾ƒf[ƒ^ƒx[ƒXƒtƒ@ƒCƒ‹B160812Œ»ÝFASTAŒ`Ž®‚µ‚©‘z’è‚µ‚Ä‚¢‚È‚¢B
-my $motif = "[KRQ]V.P.";				#’Tõ‚µ‚½‚¢ƒ‚ƒ`[ƒtB³‹K•\Œ»‚Å‘‚­B
+my $DBFilename = "uniprot-all.fasta";	#ã‚¿ãƒ³ãƒ‘ã‚¯è³ªã®é…åˆ—ã‚’å«ã‚“ã ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«ã€‚160812ç¾åœ¨FASTAå½¢å¼ã—ã‹æƒ³å®šã—ã¦ã„ãªã„ã€‚
+my $motif = "[KRQ]V.P.";				#æŽ¢ç´¢ã—ãŸã„ãƒ¢ãƒãƒ¼ãƒ•ã€‚æ­£è¦è¡¨ç¾ã§æ›¸ãã€‚
 
-my $ResultFileName = "MotifResult";			#o—Íƒtƒ@ƒCƒ‹‚Ì–¼‘O
-my $ResultFileName2 = "MotifResultTab";		#o—Íƒtƒ@ƒCƒ‹‚Ì–¼‘OBƒ^ƒu‹æØ‚è‚É‚µ‚Ä‚¢‚é‚Ì‚ÅExcel‚ÉŽg‚¤B
-my $now = getExecutionDate();			#ŽÀs“úŽž
+my $ResultFileName = "MotifResult";			#å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®åå‰
+my $ResultFileName2 = "MotifResultTab";		#å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®åå‰ã€‚ã‚¿ãƒ–åŒºåˆ‡ã‚Šã«ã—ã¦ã„ã‚‹ã®ã§Excelã«ä½¿ã†ã€‚
+my $now = getExecutionDate();			#å®Ÿè¡Œæ—¥æ™‚
 
-my $proteinName = "";					#’Tõ’†‚Ìƒ^ƒ“ƒpƒNŽ¿‚Ì–¼‘O
-my $AASequence = "";					#ƒ^ƒ“ƒpƒNŽ¿‚ÌƒAƒ~ƒmŽ_”z—ñ
-my $matchCounter = 0;					#ƒ‚ƒ`[ƒt‚ª‚ ‚Á‚½ƒ^ƒ“ƒpƒNŽ¿‚Ì”
+my $proteinName = "";					#æŽ¢ç´¢ä¸­ã®ã‚¿ãƒ³ãƒ‘ã‚¯è³ªã®åå‰
+my $AASequence = "";					#ã‚¿ãƒ³ãƒ‘ã‚¯è³ªã®ã‚¢ãƒŸãƒŽé…¸é…åˆ—
+my $matchCounter = 0;					#ãƒ¢ãƒãƒ¼ãƒ•ãŒã‚ã£ãŸã‚¿ãƒ³ãƒ‘ã‚¯è³ªã®æ•°
 
-my $proteinNumber = 0;					#ƒf[ƒ^ƒtƒ@ƒCƒ‹‚Ìƒ^ƒ“ƒpƒNŽ¿‚Ì”
-my $counter = 0;						#ƒvƒƒOƒŒƒXƒo[‚ÌƒJƒEƒ“ƒ^[
+my $proteinNumber = 0;					#ãƒ‡ãƒ¼ã‚¿ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¿ãƒ³ãƒ‘ã‚¯è³ªã®æ•°
+my $counter = 0;						#ãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼ã®ã‚«ã‚¦ãƒ³ã‚¿ãƒ¼
 my $progress = 0;
 
-###ƒR[ƒh
+###ã‚³ãƒ¼ãƒ‰
 
-#ƒf[ƒ^ƒx[ƒXƒtƒ@ƒCƒ‹‚ðŠJ‚­B“¯‚¶ƒfƒBƒŒƒNƒgƒŠ‚É’u‚­‚±‚ÆB
+#ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ãã€‚åŒã˜ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«ç½®ãã“ã¨ã€‚
 if(!open(DBF,$DBFilename) ){
 	die("DataBaseFile does not exist!")
 }
 
-#o—Íƒtƒ@ƒCƒ‹‚ðŠJ‚­B“¯‚¶–¼‘O‚ª‚ ‚é‚È‚çƒiƒ“ƒoƒŠƒ“ƒO‚ð‚·‚éB
+#å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ãã€‚åŒã˜åå‰ãŒã‚ã‚‹ãªã‚‰ãƒŠãƒ³ãƒãƒªãƒ³ã‚°ã‚’ã™ã‚‹ã€‚
 my $i = 1;
 while (-e $ResultFileName.$i.".txt"){
 	$i++;
@@ -48,12 +48,12 @@ while (-e $ResultFileName.$i.".txt"){
 open(RF,">",$ResultFileName.$i.".txt");
 open(TRF, ">", $ResultFileName2.$i.".csv");
 
-#o—Íƒtƒ@ƒCƒ‹‚É‘‚«ž‚Ý
-print RF "ŽÀs“úŽžF$now\n’Tõƒ‚ƒ`[ƒtF$motif\n’Tõƒtƒ@ƒCƒ‹F$DBFilename\n\n";
-print TRF "ŽÀs“úŽžF$now\n’Tõƒ‚ƒ`[ƒtF$motif\n’Tõƒtƒ@ƒCƒ‹F$DBFilename\n\n";
+#å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãè¾¼ã¿
+print RF "å®Ÿè¡Œæ—¥æ™‚ï¼š$now\næŽ¢ç´¢ãƒ¢ãƒãƒ¼ãƒ•ï¼š$motif\næŽ¢ç´¢ãƒ•ã‚¡ã‚¤ãƒ«ï¼š$DBFilename\n\n";
+print TRF "å®Ÿè¡Œæ—¥æ™‚ï¼š$now\næŽ¢ç´¢ãƒ¢ãƒãƒ¼ãƒ•ï¼š$motif\næŽ¢ç´¢ãƒ•ã‚¡ã‚¤ãƒ«ï¼š$DBFilename\n\n";
 
-###ˆ—
-#ƒf[ƒ^ƒx[ƒX’†‚Ìƒ^ƒ“ƒpƒNŽ¿”‚ÌŽæ“¾iƒvƒƒOƒŒƒXƒo[‚ÉŽg‚¤j
+###å‡¦ç†
+#ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ä¸­ã®ã‚¿ãƒ³ãƒ‘ã‚¯è³ªæ•°ã®å–å¾—ï¼ˆãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼ã«ä½¿ã†ï¼‰
 while(<DBF>){
 	if(m/^>/){
 		$proteinNumber++;
@@ -63,22 +63,22 @@ print "$proteinNumber\n";
 
 close DBF; open DBF, $DBFilename;
 
-#ƒ‚ƒ`[ƒt’Tõ
+#ãƒ¢ãƒãƒ¼ãƒ•æŽ¢ç´¢
 while(<DBF>){
 	if(m/^>/){
-	#V‚µ‚¢ƒ^ƒ“ƒpƒNŽ¿–¼‚Ìs‚ª—ˆ‚½‚çA¡‚Ü‚Å‚ÌƒAƒ~ƒmŽ_”z—ñ‚Å–Ú“I‚Ìˆ—‚ðs‚¤B
+	#æ–°ã—ã„ã‚¿ãƒ³ãƒ‘ã‚¯è³ªåã®è¡ŒãŒæ¥ãŸã‚‰ã€ä»Šã¾ã§ã®ã‚¢ãƒŸãƒŽé…¸é…åˆ—ã§ç›®çš„ã®å‡¦ç†ã‚’è¡Œã†ã€‚
 	
-		#ƒvƒƒOƒŒƒXƒo[‚Ìˆ—
+		#ãƒ—ãƒ­ã‚°ãƒ¬ã‚¹ãƒãƒ¼ã®å‡¦ç†
 		$counter++;
 		if($progress != int($counter*10/$proteinNumber)){
 			$progress = int($counter*10/$proteinNumber);
-			print "¡" x $progress;
-			print " " x (10-$progress);
+			print "â– " x $progress;
+			print "â–¡" x (10-$progress);
 			print "\n";
 		}
 	
 		if($AASequence =~ m/$motif/){
-		#ƒAƒ~ƒmŽ_”z—ñ’†‚ÉŽw’è‚Ìƒ‚ƒ`[ƒt‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚à‚Ì‚ð’T‚µ‚¾‚·B
+		#ã‚¢ãƒŸãƒŽé…¸é…åˆ—ä¸­ã«æŒ‡å®šã®ãƒ¢ãƒãƒ¼ãƒ•ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‚‚ã®ã‚’æŽ¢ã—ã ã™ã€‚
 			
 			$matchCounter++;
 
@@ -88,21 +88,21 @@ while(<DBF>){
 			print TRF "$matchCounter\t$proteinName\t$AASequence\n";
 		}
 		
-		#‰Šú‰»ˆ—
+		#åˆæœŸåŒ–å‡¦ç†
 		$proteinName = $_;
 		$AASequence = "";
 		
 	}else{
-		#ƒAƒ~ƒmŽ_”z—ñ‚ðŽæ“¾‚µ‚Ä‚¢‚­B
+		#ã‚¢ãƒŸãƒŽé…¸é…åˆ—ã‚’å–å¾—ã—ã¦ã„ãã€‚
 		$AASequence = $AASequence.$_;
 		chomp($AASequence);
 	}
 }
 
-#ÅŒã‚Ìƒ^ƒ“ƒpƒNŽ¿‚Íˆ—‚³‚ê‚È‚¢‚Ì‚ÅB
+#æœ€å¾Œã®ã‚¿ãƒ³ãƒ‘ã‚¯è³ªã¯å‡¦ç†ã•ã‚Œãªã„ã®ã§ã€‚
 
 if($AASequence =~ m/$motif/){
-#ƒAƒ~ƒmŽ_”z—ñ’†‚ÉŽw’è‚Ìƒ‚ƒ`[ƒt‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚à‚Ì‚ð’T‚µ‚¾‚·B
+#ã‚¢ãƒŸãƒŽé…¸é…åˆ—ä¸­ã«æŒ‡å®šã®ãƒ¢ãƒãƒ¼ãƒ•ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‚‚ã®ã‚’æŽ¢ã—ã ã™ã€‚
 	$matchCounter++;
 
 	chomp($proteinName);

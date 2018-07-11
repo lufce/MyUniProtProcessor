@@ -1,4 +1,4 @@
-#160826		ver0.1		ì‚èn‚ßB
+ï»¿#160826		ver0.1		ä½œã‚Šå§‹ã‚ã€‚
 
 use strict;
 use warnings;
@@ -452,7 +452,7 @@ sub RecNameFullMatch{
 	
 	my @matchedID  =();
 	
-	#If motif is not entered, kill the script.ƒGƒ‰[ƒƒO‚ğ“f‚­‚æ‚¤‚É‰ü—Ç‚µ‚½‚¢B
+	#If motif is not entered, kill the script.ã‚¨ãƒ©ãƒ¼ãƒ­ã‚°ã‚’åãã‚ˆã†ã«æ”¹è‰¯ã—ãŸã„ã€‚
 	unless(defined($motif)){ die "Motif sequence is not entered in $routineName"; }
 	
 	print "$routineName starts.\n";
@@ -517,7 +517,7 @@ sub CountID{
 }
 
 sub _FTFlatFramework{
-	#ƒeƒXƒgƒ‰ƒ“‚ª‚Ü‚¾
+	#ãƒ†ã‚¹ãƒˆãƒ©ãƒ³ãŒã¾ã 
 	#need (parentalRoutineName, FTKey, argumentReference, judgeMode)
 	
 	#judgeMode == 0;  FT region is included in region of interest
@@ -1013,7 +1013,7 @@ sub _argumentCheck2{
 		}
 	}
 	
-	#define the mode. The difinition of the mode is based on 'İŒvˆÄ.docx' .
+	#define the mode. The difinition of the mode is based on 'è¨­è¨ˆæ¡ˆ.docx' .
 	if( $num == 0 ){
 		$mode = 1;
 		

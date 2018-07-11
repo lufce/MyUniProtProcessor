@@ -1,4 +1,4 @@
-#160825		ver1.0		Š®¬B
+ï»¿#160825		ver1.0		å®Œæˆã€‚
 
 package MyProgressBar;
 
@@ -56,8 +56,8 @@ sub printProgressBar{
 		if($progress == $self->{former}){
 			return;
 		}else{
-			print "¡" x $progress;
-			print " " x (10-$progress);
+			print "â– " x $progress;
+			print "â–¡" x (10-$progress);
 			print "\n";
 			
 			$self->{former} = $progress;
