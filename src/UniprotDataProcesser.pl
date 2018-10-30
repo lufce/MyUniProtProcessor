@@ -9,6 +9,8 @@ require "MyProgressBar.pm";
 ###
 my $resultFileName = "../result/testLocalize.txt";
 my $resultIDRef;
+my $regionIDRef1;
+my $regionIDRef2;
 my $resultRegionsRef;
 my $num;
 my $num2;
@@ -16,8 +18,10 @@ my $i;
 
 
 $resultIDRef = &GO_C_Match('cilium|flagellum|cilia|flagella');
-#$resultIDRef = &isLipidated("S-palmitoyl",$resultIDRef);
-$resultIDRef = &ProteinMotifMatchWithRegions('[ST]P',$resultIDRef);
+#$resultIDRef = &isLipidated("geranylgeranyl|farnesyl",$resultIDRef);
+#$resultIDRef = &ProteinMotifMatchWithRegions('RP.[TS][PATS]',$resultIDRef);
+($regionIDRef1, $resultIDRef) = &ProteinMotifMatchWithRegions('RP.[TS][PATS]', $resultIDRef);
+#($regionIDRef2, $resultIDRef) = &ProteinMotifMatchWithRegions('SP', $resultIDRef);
 
 $num = @$resultIDRef;
 
@@ -26,12 +30,14 @@ open RF, ">$resultFileName";
 print RF "$num hits!\n";
 
 for ($i = 0; $i < $num; $i++){
-	print RF "$$resultIDRef[$i]\n";
+	my $region = $regionIDRef1->{$$resultIDRef[$i]};
+	print RF "$$resultIDRef[$i]\t$region\n";
+	#print RF "$$resultIDRef[$i]\n";
 }
 
 close RF;
 
-&ID_to_AllContents($resultIDRef);
+#&ID_to_AllContents($resultIDRef);
 
 print "finish";
 
@@ -222,7 +228,7 @@ sub SLMatch{
 
 sub GO_C_Match{
 	my $SearchFileName = "../data/human/rev/ID-GO_rev_uniprot-all.txt";
-	my $routineName = "GO_C_Match";
+	my $routineName    = "GO_C_Match";
 	
 	my $num;		#The number of arguments
 	my $thisId;
@@ -392,7 +398,7 @@ sub ProteinMotifMatchWithRegions{
 				$region = "";
 								
 				while($sequence =~ m/$query/g){ 
-					$region = sprintf("%d,%d,", length($`)+1,length($`.$&));
+					$region = $region.sprintf("%d,%d,", length($`)+1,length($`.$&));
 				}
 				unless($region eq ""){
 					push(@matchedID,$thisId);
@@ -415,7 +421,7 @@ sub ProteinMotifMatchWithRegions{
 					$region = "";
 									
 					while($sequence =~ m/$query/g){ 
-						$region = sprintf("%d,%d,", length($`)+1,length($`.$&));
+						$region = $region.sprintf("%d,%d,", length($`)+1,length($`.$&));
 					}
 					unless($region eq ""){
 						push(@matchedID,$thisId);

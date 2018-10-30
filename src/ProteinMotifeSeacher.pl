@@ -18,7 +18,7 @@ sub getExecutionDate(){
 my $startTime = Time::HiRes::time();
 
 my $DBFilename = "uniprot-all.fasta";	#タンパク質の配列を含んだデータベースファイル。160812現在FASTA形式しか想定していない。
-my $motif = "[KRQ]V.P.";				#探索したいモチーフ。正規表現で書く。
+my $motif = "RP.[TS][PATS]";				#探索したいモチーフ。正規表現で書く。
 
 my $ResultFileName = "MotifResult";			#出力ファイルの名前
 my $ResultFileName2 = "MotifResultTab";		#出力ファイルの名前。タブ区切りにしているのでExcelに使う。
