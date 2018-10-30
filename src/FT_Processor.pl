@@ -52,7 +52,7 @@ sub _getFTDescription{
 	if(length($FTLine) >= 35){
 		$FTDesc = substr($FTLine, 34);
 		chomp($FTDesc);
-	}else
+	}
 	
 	return $FTDesc;
 }
