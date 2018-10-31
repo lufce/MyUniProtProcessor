@@ -1,54 +1,14 @@
-﻿my $RefFilename = "../data/human/rev/ID-sq_rev_uniprot-all.txt";
-my $routineName = "ID_to_AllContents";
+require "FT_Processor.pl";
 
-print "$routineName starts.\n";
+(my $id_ref, my $code_ref) = &ft_process::get_FT_Contents_By_Key_And_Description("","PDB:4DNK");
 
+my $id_length = @$id_ref;
 
-open DB, $RefFilename;
-
-$declared_length = "";
-$count_length    = "";
-
-$matched_entry   = 0;
-$unmatched_entry = 0;
-$total_entry     = 0;
-
-$readID  = 0;
-$isTitin = 0;
-
-while(<DB>){
-	if(m/\s+(\d+) AA/){
-		$declared_length = $1;
-		$readID = 1;
-		
-		if($declared_length == 34350){
-			$isTitin = 1;
-		}
-	}elsif(m/^sq   (.+)$/){
-		$count_length = length($1);
-		$AAsequence = $1;
-		if($isTitin){
-			print "$count_length\n$AAsequence\n";
-			$isTitin = 0;
-		}
-		
-		if(readID){
-			$total_entry++;
-			$readID = 0;
-			
-			if($declared_length == $count_length){
-				$matched_entry++;
-			}else{
-				$unmatched_entry++;
-			}
-		}
+for(my $i =0; $i < $id_length; $i++){
+	(my $key_ref, my $pos_ref, my $dsc_ref) = &ft_process::decode_FT_Code( $$code_ref{ $$id_ref[$i] } );
+	
+	$dsc_length = @$dsc_ref;
+	for(my $j = 0; $j < $dsc_length; $j++){
+		print("$$key_ref[$j] : $$pos_ref[$j][0]-$$pos_ref[$j][1] : $$dsc_ref[$j]\n");
 	}
 }
-
-print "Total:$total_entry\nMatch:$matched_entry\nUnmat:$unmatched_entry\n";
-
-
-
-close DB;
-
-print "$routineName ends.\n";
