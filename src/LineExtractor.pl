@@ -8,11 +8,12 @@ require "MyProgressBar.pm";
 my $species = "human";
 our $dataDir = "../data/$species/rev/";
 our $listDir = "../cont_list/$species/rev/";
+#my $raw_textfile_name = "rev_uniprot-all.txt";
+my $raw_textfile_name = "181101_rev_uniprot_human_all.txt";
+my $raw_textfile_path = $dataDir.$raw_textfile_name;
 ###
 
-
-&FTKeyExtractor;
-
+&CC_Extractor;
 
 ###
 
@@ -52,7 +53,8 @@ sub AddEndMarker{
 
 sub GNDEExtractor{
 	my $startTime = Time::HiRes::time();
-	my $DBFilename = $MyLE::dataDir."rev_uniprot-all.txt";	
+#	my $DBFilename = $MyLE::dataDir."rev_uniprot-all.txt";
+	my $DBFilename = $MyLE::dataDir."181101_rev_uniprot_human_all.txt";	
 	my $ResultFileName = $MyLE::dataDir."ID-GNDE_rev_uniprot-all.txt";
 	my $routineName = "GNDEExtractor";
 	
@@ -501,6 +503,67 @@ sub FTOneLiner{
 	print "$routineName ends\n";
 	close DB;	close RF;
 	
+	printf("%0.3f\n",Time::HiRes::time - $startTime); 
+}
+
+sub GNDE_Extractor{
+	my $code_name = "GNDE";
+	my $regex = "^GN|^DE";
+	
+	&_Line_Code_Extractor($code_name, $regex);
+}
+
+sub FT_Extractor{
+	my $code_name = "FT";
+	my $regex = "^FT";
+	
+	&_Line_Code_Extractor($code_name, $regex);
+}
+
+sub CC_Extractor{
+	my $code_name = "CC";
+	my $regex = "^CC";
+	
+	&_Line_Code_Extractor($code_name, $regex);
+}
+
+sub GO_Extractor{
+	my $code_name = "GO";
+	my $regex = "^DR   GO";
+	
+	&_Line_Code_Extractor($code_name, $regex);
+}
+
+sub _Line_Code_Extractor{
+
+	(my $code_name, my $regex) = @_;
+	my $ResultFileName = $dataDir."ID-${code_name}_$raw_textfile_name";
+	
+	my $startTime = Time::HiRes::time();
+	print "${code_name}_Extractor starts.\n";
+	
+	open DB,$raw_textfile_path or die "No file";
+	
+	my $objPB = new MyProgressBar;
+	$objPB->setAll($raw_textfile_path);
+	
+	open RF, ">$ResultFileName";
+	
+	while(<DB>){
+		$objPB->addNowAndPrint($_);
+		
+		if(m/^ID/){
+			print RF;
+		}elsif(m/$regex/){
+			print RF;
+		}elsif(m|^//$|){
+			print RF;
+		}		
+	}
+	close DB;
+	close RF;
+	
+	print "${code_name}_Extractor ends.\n";
 	printf("%0.3f\n",Time::HiRes::time - $startTime); 
 }
 

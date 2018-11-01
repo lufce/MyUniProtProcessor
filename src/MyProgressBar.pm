@@ -21,44 +21,59 @@ sub nowAndPrint{
 	&setNow($self,$now); &printProgressBar($self);
 }
 
+sub addNowAndPrint{
+	my $self = shift;
+	my $now = shift;
+	
+	&addNow($self,$now); &printProgressBar($self);
+}
+
 sub setNow{
 	my $self = shift;
 	my $now = shift;
 	$self->{now} = $now;
 }
 
+sub addNow{
+	my $self = shift;
+	my $now = shift;
+	$self->{now} += length($now);
+	
+	if($now =~ m/\n$/){
+		$self->{now}++;
+	}
+}
+
 sub setAll{
 	#When setting is failed, return 0.
 	
 	my ($self, $all) = @_;
-	$fileLine=0;
 
 	if($all =~ m/\A\d+\Z/){
 		$self->{all}=$all;
 		return 1;
 	}else{
-		open FN, $all or return 0;
-		while(<FN>){ $fileLine++; }
-		close FN;
-		$self->{all} = $fileLine;
-		
-		return 1;
+		if(-f $all){
+			$self->{all} = -s $all;
+			return 1;
+		}else{
+			return 0;
+		}
 	}
 }
 
 sub printProgressBar{
 	my $self = shift;
 	my $progress;
-
+	
 	if (defined($self->{all})){
 		$progress = int( $self->{now} *10 / $self->{all} );
 		
 		if($progress == $self->{former}){
 			return;
 		}else{
-			print "■" x $progress;
-			print "□" x (10-$progress);
-			print "\n";
+			print "■" x $progress . "□" x (10-$progress) . "\r";
+			#print "\n";
 			
 			$self->{former} = $progress;
 			

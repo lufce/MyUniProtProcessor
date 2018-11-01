@@ -30,7 +30,7 @@ sub get_FT_Contents_By_Key_And_Description{
 	#ID行がくるまでループ
 	while(<DB>){
 	
-		$objPB -> nowAndPrint($.);
+		$objPB -> addNowAndPrint($_);
 		
 		if(m/^ID   (.+?) /){
 			my $this_id = $1;
@@ -39,7 +39,7 @@ sub get_FT_Contents_By_Key_And_Description{
 			#FTのKeyがqueryと一致するものを探す
 			while(<DB>){
 				
-				$objPB->nowAndPrint($.);
+				$objPB -> addNowAndPrint($_);
 				
 				#タンパク質の最後の行になったらID取得ループに戻る。
 				if(m|^//$|){ last; }
@@ -77,59 +77,54 @@ sub get_FT_Contents_By_Key_And_Description{
 }
 
 sub decode_FT_Code{
+	#"Key1*,Start*,End*,Description*;Key2 ..."というコードを受け取って、Key配列、Start配列、End配列、Description配列を返す。
 	#デコードに失敗すると-1を返す。
 	
 	my $code = shift;
 	
-	(my $key_buf, my $pos_buf, my $dsc_buf) = split(/\*;/, $code);
+	my @items = split(/\*;/, $code);
 	
-	#どれかひとつでも未定義の変数があればエラーとして-1を返す。
-	if(!defined($key_buf) or!defined($pos_buf) or !defined($dsc_buf)){ return -1; }
+	my @key = ();
+	my @start = ();
+	my @end = ();
+	my @dsc = ();
 	
-	my @key = split(/\*,/, $key_buf);
-	my @start_end = split(/\*,/, $pos_buf);
-	my @dsc = split(/\*,/, $dsc_buf);
-	
-	#key, pos, dscの情報の数は一致するはず。しなかったらエラーを返す。
-	if($#start_end != $#dsc){return -1;}
-	if($#start_end != $#key){return -1;}
-	if($#dsc != $#key){return -1;}
-	
-	my @pos = ();
-	foreach my $item (@start_end){
-		my @each_end = split(/\.\./, $item);
-		push(@pos,\@each_end);
+	foreach my $i (@items){
+		my @buf = split(/\*,/, $i);
+		
+		push(@key, $buf[0]);
+		push(@start, $buf[1]);
+		push(@end, $buf[2]);
+		push(@dsc, $buf[3]);
 	}
 	
-	return \@key, \@pos, \@dsc;
+	#key, start, end, dscの情報の数は一致するはず。しなかったらエラーを返す。
+	if($#key != $#start or $#key != $#end or $#key != $#dsc){return -1;}
+	if($#start != $#end or $#start != $#dsc){return -1;}
+	if($#end != $#dsc){return -1;}
+	
+	return \@key, \@start, \@end, \@dsc
 }
 
 sub _make_FT_Code{
-	#FT行が入った配列を受け取って、Keyでまとめて"$key*;$pos_buf*;$dsc_buf"というフォーマットに変える。
+	#FT行が入った配列を受け取って、"Key1*,Start*,End*,Description*;Key2 ..."というフォーマットに変える。
 	
 	my $matched_line_ref = shift;
 	
-	my $key_buf = "";
-	my $pos_buf = "";
-	my $dsc_buf = "";
+	my $code ="";
 	
 	#positionについて開始位置と終了位置の間を".."で区切る。
 	#position同士やdescription同士を"*,"で区切る
 	foreach my $line (@$matched_line_ref){
 		my $item_ref = &_getFTAllItems($line);
 		
-		$key_buf = $key_buf."$$item_ref[0]*,";
-		$pos_buf = $pos_buf.sprintf("%d..%d*," , $$item_ref[1], $$item_ref[2]);
-		$dsc_buf = $dsc_buf."$$item_ref[3]*,";
+		$code = $code."$$item_ref[0]*,$$item_ref[1]*,$$item_ref[2]*,$$item_ref[3]*;"
 	}
 	
-	#文末についている区切り文字*,を消す。
-	$key_buf = substr($key_buf, 0, -2);
-	$pos_buf = substr($pos_buf, 0, -2);
-	$dsc_buf = substr($dsc_buf, 0, -2);
+	#文末についている区切り文字*;を消す。
+	$code = substr($code, 0, -2);
 	
-	#keyとposition、descriptionの間を*;で区切って返す。
-	return "$key_buf*;$pos_buf*;$dsc_buf";
+	return $code;
 	
 }
 
