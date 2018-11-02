@@ -9,11 +9,11 @@ my $species = "human";
 our $dataDir = "../data/$species/rev/";
 our $listDir = "../cont_list/$species/rev/";
 #my $raw_textfile_name = "rev_uniprot-all.txt";
-my $raw_textfile_name = "181101_rev_uniprot_human_all.txt";
+my $raw_textfile_name = "uniprot_test_doc.txt";
 my $raw_textfile_path = $dataDir.$raw_textfile_name;
 ###
 
-&CC_Extractor;
+&SQ_Extractor;
 
 ###
 
@@ -534,6 +534,13 @@ sub GO_Extractor{
 	&_Line_Code_Extractor($code_name, $regex);
 }
 
+sub SQ_Extractor{
+	my $code_name = "SQ";
+	my $regex = "^ ";
+	
+	&_Line_Code_Extractor($code_name, $regex);
+}
+
 sub _Line_Code_Extractor{
 
 	(my $code_name, my $regex) = @_;
@@ -542,29 +549,98 @@ sub _Line_Code_Extractor{
 	my $startTime = Time::HiRes::time();
 	print "${code_name}_Extractor starts.\n";
 	
-	open DB,$raw_textfile_path or die "No file";
+	open my $DB, $raw_textfile_path or die "No file";
 	
 	my $objPB = new MyProgressBar;
 	$objPB->setAll($raw_textfile_path);
 	
-	open RF, ">$ResultFileName";
+	open my $RF, ">$ResultFileName";
 	
-	while(<DB>){
+	while(<$DB>){
 		$objPB->addNowAndPrint($_);
 		
-		if(m/^ID/){
-			print RF;
-		}elsif(m/$regex/){
-			print RF;
-		}elsif(m|^//$|){
-			print RF;
-		}		
+		if($code_name eq "SQ"){
+			&_Extract_Processor_SQ($_, $DB, $RF,$regex);
+		}else{
+			&_Extract_Processor_Simple($_, $RF,$regex);
+		}
 	}
-	close DB;
-	close RF;
+		
+	close $DB;
+	close $RF;
 	
 	print "${code_name}_Extractor ends.\n";
 	printf("%0.3f\n",Time::HiRes::time - $startTime); 
+}
+
+sub _Extract_Processor_Simple{
+	(my $line, my $RF, my $regex) = @_;
+	
+	if($line =~ m/^ID/){
+		print $RF $line;
+	}elsif($line =~ m/$regex/){
+		print $RF $line;
+	}elsif($line =~ m|^//$|){
+		print $RF $line;
+	}
+	
+	return;
+}
+
+sub _Extract_Processor_SQ{
+	(my $line, my $DB, my $RF, my $regex) = @_;
+	
+	my $seq;
+	
+	if($line =~ m/^ID/){
+		print $RF $line;
+		return;
+	}elsif($line !~ m/$regex/){
+		return;
+	}
+	
+	$seq = $line;
+	chomp($seq);
+	
+	while(<$DB>){
+		if(m|^//|){
+			last;
+		}
+		
+		$seq = $seq.$_;
+		chomp($seq);
+		
+	}
+	
+	$seq =~ tr/ //d;
+	print $RF "$seq\n";
+	
+	return;
+	
+}
+
+sub _Extract_Processor_SL{
+	(my $line, my $DB, my $RF, my $regex) = @_;
+	
+	if($line =~ m/^ID/){
+		print $RF $line;
+		return;
+	}elsif($line !~ m/$regex/){
+		return;
+	}else{
+		print $RF $line;
+	}
+	
+	while(<$DB>){
+		if(m/$regex|^CC       /){
+			print $RF;
+		}else{
+			last;
+		}
+	}
+	
+	print $RF "//\n";
+	return;
 }
 
 1;
