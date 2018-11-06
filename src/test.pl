@@ -13,28 +13,6 @@
 #	}
 #}
 
-$dir = "../data/human/rev/";
-$f_name = "uniprot_test_doc.txt";
+require "DataFileName.pl";
 
-open my $FN, $dir.$f_name or die $!;
-
-
-$count = 0;
-while(<$FN>){
-	$count++;
-	print;
-	
-	if($count >= 960){last;}
-}
-
-&test($FN);
-
-sub test{
-	$FN2 = shift;
-	
-	print "in subroutin!\n";
-	
-	while(<$FN2>){
-		print;
-	}
-}
+print(DFName::code_list{'FT'});
