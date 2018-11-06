@@ -6,16 +6,17 @@ use strict;
 use warnings;
 use Time::HiRes;
 
-package ft_process;
+package MyFTP;
 
 require "MyProgressBar.pm";
+require "File_and_Directory_catalog.pl";  # MyName::
 
-#my $SerchFileName = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
-my $SerchFileName = "../data/human/rev/ID-FT_rev_uniprot-allFlatTest.txt";
+#my $serch_file_path = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
+my $serch_file_path = MyName::get_data_file_path($MyName::FT_KEY);
 
 sub get_FT_Contents_By_Key_And_Description{
 	#
-	(my $query_key, my $query_dsc, my $key) = @_;
+	my ($query_key, $query_dsc, $key) = @_;
 	
 	my $objPB = new MyProgressBar;
 	
@@ -23,9 +24,9 @@ sub get_FT_Contents_By_Key_And_Description{
 	my %id_to_code = ();
 	
 	#open database file
-	open DB, $SerchFileName or die($!);
+	open DB, $serch_file_path or die($!);
 	
-	$objPB -> setAll($SerchFileName);
+	$objPB -> setAll($serch_file_path);
 	
 	#ID行がくるまでループ
 	while(<DB>){

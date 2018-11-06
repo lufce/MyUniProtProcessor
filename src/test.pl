@@ -13,6 +13,7 @@
 #	}
 #}
 
-require "DataFileName.pl";
+require "Catalog_Maker.pl"; # MyCM
+require "File_and_Directory_catalog.pl"; # MyName
 
-print(DFName::code_list{'FT'});
+print($MyName::FT_KEY);

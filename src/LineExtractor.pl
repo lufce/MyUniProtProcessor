@@ -1,31 +1,22 @@
 ﻿#	181106	ver 0.9	とりあえず完成。
+#TODO FT行など、抜き出すのが増えるたびの、重たい元データファイルを開き直すのは頭のいいやり方では無いと思う。
+#     一回、元データファイルを開いたら、行コードごとに対応する記録ファイルに書き込むよなLineExtractorを作るべき。
 
 package MyLE;
 
 use Time::HiRes;
 require "MyProgressBar.pm";
-require "File_and_Directory_catalog.pl";
+require "File_and_Directory_catalog.pl";  # MyName::
 
-my $dataDir = ::get_data_file_dir();
-#my $catalogDir = "../contents_catalog_list/$species/rev/";
-#my $raw_textfile_name = "rev_uniprot-all.txt";
-my $raw_textfile_name = ::get_raw_data_file_name();
-#my $raw_textfile_name = "181101_rev_uniprot_human_all.txt";
-my $raw_textfile_path = $dataDir.$raw_textfile_name;
-
-#コードはハッシュにして保守しやすくしよう。
-#TODO この辺の名前とかディレクトリだけのperlファイルを作って参照したほうがいいのかもしれない。
-#my %code_list =(
-#    'GNDE' => "GMDE",
-#    'FT' => "FT",
-#    'CC' => "CC",
-#    'GO' => "GO",
-#    'SQ' => "SQ",
-#    'SL' => "SL");
+my $dataDir = MyName::get_data_file_dir();
+my $raw_text_file_name = MyName::get_raw_data_file_name();
+my $raw_text_file_path = $dataDir.$raw_text_file_name;
 
 ###
 
-sub main{
+&test();
+
+sub test{
 	&All_Extractor();
 }
 
@@ -68,7 +59,7 @@ sub AddEndMarker{
 sub GOContentExtractor{
 	my $startTime = Time::HiRes::time();
 	my $DBFilename = $MyLE::dataDir."ID-GO_rev_uniprot-all.txt";
-	my $ResultFileName = $MyLE::catalogDir."GOContetnts.txt";
+	my $ResultFileName = "GOContetnts.txt";
 	my $routineName = "GOContentExtractor";
 	
 	my @buf;
@@ -238,66 +229,60 @@ sub All_Extractor{
 }
 
 sub GNDE_Extractor{
-	my $code_name = ::get_GNDE_code_name();
 	my $regex = "^GN|^DE";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
+	&_Line_Code_Extractor_Template($MyName::GNDE_KEY, $regex);
 }
 
 sub FT_Extractor{
-	my $code_name = ::get_FT_code_name();
 	my $regex = "^FT";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
-	&_Flatten_Extracted_Text_Template($code_name);
+	&_Line_Code_Extractor_Template($MyName::FT_KEY, $regex);
+	&_Flatten_Extracted_Text_Template($MyName::FT_KEY);
 }
 
 sub CC_Extractor{
-	my $code_name = ::get_CC_code_name();
 	my $regex = "^CC";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
+	&_Line_Code_Extractor_Template($MyName::CC_KEY, $regex);
 }
 
 sub GO_Extractor{
-	my $code_name = ::get_GO_code_name();
 	my $regex = "^DR   GO";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
+	&_Line_Code_Extractor_Template($MyName::GO_KEY, $regex);
 }
 
 sub SQ_Extractor{
-	my $code_name = ::get_SQ_code_name();
 	my $regex = "^ ";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
+	&_Line_Code_Extractor_Template($MyName::SQ_KEY, $regex);
 }
 
 sub SL_Extractor{
-	my $code_name = ::get_SL_code_name();
 	my $regex = "^CC   -!- SUBCELLULAR LOCATION";
 	
-	&_Line_Code_Extractor_Template($code_name, $regex);
-	&_Flatten_Extracted_Text_Template($code_name);
+	&_Line_Code_Extractor_Template($MyName::SL_KEY, $regex);
+	&_Flatten_Extracted_Text_Template($MyName::SL_KEY);
 }
 
 sub _Line_Code_Extractor_Template{
 
-	(my $code_name, my $regex) = @_;
-	my $ResultFileName = $dataDir."ID-${code_name}_$raw_textfile_name";
+	my ($code_key, $regex) = @_;
+	my $record_file_path = MyName::get_data_file_path($code_key);
 	
 	my $startTime = Time::HiRes::time();
-	print "${code_name}_Extractor starts.\n";
+	print $code_key."_Extractor starts.\n";
 	
 	my $objPB = new MyProgressBar;
-	$objPB->setAll($raw_textfile_path);
+	$objPB->setAll($raw_text_file_path);
 	
-	open (my $DB, '<', $raw_textfile_path) or die $!;
-	open (my $RF, '>', $ResultFileName) or die $!;
+	open (my $DB, '<', $raw_text_file_path) or die $!;
+	open (my $RF, '>', $record_file_path) or die $!;
 	
-	if($code_name eq ::get_SQ_code_name() ){
+	if($code_key eq $MyName::SQ_KEY ){
 		&_Extract_Processor_SQ($DB, $RF, $regex, $objPB);
-	}elsif($code_name eq ::get_SL_code_name() ){
+	}elsif($code_key eq $MyName::SL_KEY ){
 		&_Extract_Processor_SL($DB, $RF, $regex, $objPB);
 	}else{
 		&_Extract_Processor_Simple($DB, $RF, $regex, $objPB);
@@ -306,12 +291,12 @@ sub _Line_Code_Extractor_Template{
 	close $DB;
 	close $RF;
 	
-	print "${code_name}_Extractor ends. ";
+	print $code_key."_Extractor ends. ";
 	printf("%0.3f sec.\n",Time::HiRes::time - $startTime); 
 }
 
 sub _Extract_Processor_Simple{
-	(my $DB, my $RF, my $regex, my $myPB) = @_;
+	my ($DB, $RF, $regex, $myPB) = @_;
 	
 	while(my $line = <$DB>){
 		
@@ -330,7 +315,7 @@ sub _Extract_Processor_Simple{
 }
 
 sub _Extract_Processor_SQ{
-	(my $DB, my $RF, my $regex, my $myPB) = @_;
+	my ($DB, $RF, $regex, $myPB) = @_;
 	
 	my $seq;
 	
@@ -369,7 +354,7 @@ sub _Extract_Processor_SQ{
 }
 
 sub _Extract_Processor_SL{
-	(my $DB, my $RF, my $regex, my $myPB) = @_;
+	my ($DB, $RF, $regex, $myPB) = @_;
 	
 	while(my $line = <$DB>){
 		
@@ -404,13 +389,13 @@ sub _Extract_Processor_SL{
 }
 
 sub _Flatten_Extracted_Text_Template{
-	my $code_name = shift;
+	my $code_key = shift;
 	
-	my $open_file_name = "ID-${code_name}_$raw_textfile_name";
+	my $open_file_name = MyName::get_data_file_name($code_key);
 	my $recode_file_name = "f-".$open_file_name;
 	
 	my $startTime = Time::HiRes::time();
-	print "Flatten_Extracted_${code_name}_Text starts.\n";
+	print "Flatten_Extracted_".$code_key."_Text starts.\n";
 	
 	my $objPB = new MyProgressBar;
 	$objPB->setAll($dataDir.$open_file_name);
@@ -420,9 +405,9 @@ sub _Flatten_Extracted_Text_Template{
 	
 	my $content = "";
 	
-	if($code_name eq ::get_SL_code_name() ){
+	if($code_key eq $MyName::SL_KEY){
 		_Flattening_Processor_SL($IN, $OUT, $objPB);
-	}elsif($code_name eq ::get_FT_code_name() ){
+	}elsif($code_key eq $MyName::FT_KEY){
 		_Flattening_Processor_FT($IN, $OUT, $objPB);
 	}
 	
@@ -432,12 +417,12 @@ sub _Flatten_Extracted_Text_Template{
 	unlink($dataDir.$open_file_name);
 	rename($dataDir.$recode_file_name, $dataDir.$open_file_name);	
 	
-	print "Flatten_Extracted_${code_name}_Text ends. ";
+	print "Flatten_Extracted_".$code_key."_Text ends. ";
 	printf("%0.3f sec.\n",Time::HiRes::time - $startTime); 
 }
 
 sub _Flattening_Processor_SL{
-	(my $IN, my $OUT, my $myPB) = @_;
+	my ($IN, $OUT, $myPB) = @_;
 	
 	my $content = "";
 	
@@ -478,7 +463,7 @@ sub _Flattening_Processor_SL{
 }
 
 sub _Flattening_Processor_FT{
-	(my $IN, my $OUT, my $myPB) = @_;
+	my ($IN, $OUT, $myPB) = @_;
 	
 	my $content = "";
 	
@@ -519,7 +504,5 @@ sub _Flattening_Processor_FT{
 		}
 	}
 }
-
-&main();
 
 1;
