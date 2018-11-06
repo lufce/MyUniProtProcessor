@@ -1,9 +1,8 @@
 
-package DFName;
+package MyName;
 
 my $species = "human";
 
-my $catalog_file_dir = "../catalog_list/$species/rev/";
 my $data_file_dir = "../data/$species/rev/";
 my $catalog_dir = "../contents_catalog_list/$species/rev/";
 
@@ -18,6 +17,10 @@ my %code_list =(
     'GO' => "GO",
     'SQ' => "SQ",
     'SL' => "SL");
+
+sub get_catalog_dir{
+	return $catalog_dir;
+}
 
 sub get_data_file_dir{
 	return $data_file_dir;

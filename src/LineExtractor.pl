@@ -4,12 +4,12 @@ package MyLE;
 
 use Time::HiRes;
 require "MyProgressBar.pm";
-require "DataFileName.pl";
+require "File_and_Directory_catalog.pl";
 
-my $dataDir = DFName::get_data_file_dir();
+my $dataDir = ::get_data_file_dir();
 #my $catalogDir = "../contents_catalog_list/$species/rev/";
 #my $raw_textfile_name = "rev_uniprot-all.txt";
-my $raw_textfile_name = DFName::get_raw_data_file_name();
+my $raw_textfile_name = ::get_raw_data_file_name();
 #my $raw_textfile_name = "181101_rev_uniprot_human_all.txt";
 my $raw_textfile_path = $dataDir.$raw_textfile_name;
 
@@ -238,14 +238,14 @@ sub All_Extractor{
 }
 
 sub GNDE_Extractor{
-	my $code_name = DFName::get_GNDE_code_name();
+	my $code_name = ::get_GNDE_code_name();
 	my $regex = "^GN|^DE";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
 }
 
 sub FT_Extractor{
-	my $code_name = DFName::get_FT_code_name();
+	my $code_name = ::get_FT_code_name();
 	my $regex = "^FT";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
@@ -253,28 +253,28 @@ sub FT_Extractor{
 }
 
 sub CC_Extractor{
-	my $code_name = DFName::get_CC_code_name();
+	my $code_name = ::get_CC_code_name();
 	my $regex = "^CC";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
 }
 
 sub GO_Extractor{
-	my $code_name = DFName::get_GO_code_name();
+	my $code_name = ::get_GO_code_name();
 	my $regex = "^DR   GO";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
 }
 
 sub SQ_Extractor{
-	my $code_name = DFName::get_SQ_code_name();
+	my $code_name = ::get_SQ_code_name();
 	my $regex = "^ ";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
 }
 
 sub SL_Extractor{
-	my $code_name = DFName::get_SL_code_name();
+	my $code_name = ::get_SL_code_name();
 	my $regex = "^CC   -!- SUBCELLULAR LOCATION";
 	
 	&_Line_Code_Extractor_Template($code_name, $regex);
@@ -295,9 +295,9 @@ sub _Line_Code_Extractor_Template{
 	open (my $DB, '<', $raw_textfile_path) or die $!;
 	open (my $RF, '>', $ResultFileName) or die $!;
 	
-	if($code_name eq DFName::get_SQ_code_name() ){
+	if($code_name eq ::get_SQ_code_name() ){
 		&_Extract_Processor_SQ($DB, $RF, $regex, $objPB);
-	}elsif($code_name eq DFName::get_SL_code_name() ){
+	}elsif($code_name eq ::get_SL_code_name() ){
 		&_Extract_Processor_SL($DB, $RF, $regex, $objPB);
 	}else{
 		&_Extract_Processor_Simple($DB, $RF, $regex, $objPB);
@@ -420,9 +420,9 @@ sub _Flatten_Extracted_Text_Template{
 	
 	my $content = "";
 	
-	if($code_name eq DFName::get_SL_code_name() ){
+	if($code_name eq ::get_SL_code_name() ){
 		_Flattening_Processor_SL($IN, $OUT, $objPB);
-	}elsif($code_name eq DFName::get_FT_code_name() ){
+	}elsif($code_name eq ::get_FT_code_name() ){
 		_Flattening_Processor_FT($IN, $OUT, $objPB);
 	}
 	
