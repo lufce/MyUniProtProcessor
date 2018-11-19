@@ -1,10 +1,14 @@
 ﻿#	181106	ver 0.9	とりあえず完成。
 #TODO FT行など、抜き出すのが増えるたびの、重たい元データファイルを開き直すのは頭のいいやり方では無いと思う。
 #     一回、元データファイルを開いたら、行コードごとに対応する記録ファイルに書き込むよなLineExtractorを作るべき。
+#     少なくとも、行コードの１回の判定だけで済むような、GNDE,FT,CC,SQExtractorは、１回でできるはず。
 
 package MyLE;
 
+use strict;
+use warnings;
 use Time::HiRes;
+
 require "MyProgressBar.pm";
 require "File_and_Directory_catalog.pl";  # MyName::
 
@@ -17,7 +21,7 @@ my $raw_text_file_path = $dataDir.$raw_text_file_name;
 &test();
 
 sub test{
-	&All_Extractor();
+	&GNDE_Extractor();
 }
 
 ###
@@ -25,7 +29,7 @@ sub test{
 sub AddEndMarker{
 	my $DBFilename =$MyLE::dataDir."ID-sq_rev_uniprot-all.txt";
 	my $ResultFileName = $MyLE::dataDir."ID-sq_rev_uniprot-all2.txt";
-	my $routinName = "AddEndMarker";
+	my $routineName = "AddEndMarker";
 	
 	my $objPB = new MyProgressBar;
 	
@@ -228,6 +232,71 @@ sub All_Extractor{
 	&SL_Extractor();
 }
 
+sub sort_raw_data_text{
+	#GO matchやFT matchを行う際に、元のテキストデータがID昇順に並んでいるほうが絶対にいいので、最初にソートしてしまう。
+
+	my @ID_catalog = ();
+	my @index = ();
+	my @contents = ();
+	
+	print("sort_raw_data_text starts.\n");
+	
+	my $raw_data_path = MyName::get_raw_data_file_path();	
+	open my $IN , '<', $raw_text_file_path or die $!;
+	
+	my $objPB = new MyProgressBar;
+	$objPB->setAll($raw_text_file_path);
+	
+	print("collecting IDs ...\n");
+	
+	while(my $line = <$IN>){
+		$objPB->addNowAndPrint($line);
+		
+		if($line =~ m/^ID   (.+?) /){
+			push(@ID_catalog, $1)
+		}
+	}
+	close $IN;
+	
+	print("sorting IDs ...\n");
+	
+	my @sorted = sort @ID_catalog;
+	
+	print("making ID index ...\n");
+	
+	for(my $i = 0; $i <= $#ID_catalog; $i++){
+		for (my $j = 0; $j <= $#ID_catalog; $j++){
+			if($sorted[$i] eq $ID_catalog[$j]){
+				push(@index, $j);
+				last;
+			}
+		}
+	}
+
+	print("split raw text ...\n");
+	open my $IN2 , '<', $raw_text_file_path or die $!;
+	{
+		local $/ = "\n//\n";
+		@contents = <$IN2>;
+	}
+	close $IN2;
+	
+	print("recording sorted raw text ...\n");
+	my $record_path = MyName::get_data_file_dir();
+	$record_path = $record_path."sorted.txt";
+	open my $OUT, '>', $record_path or die $!;
+	
+	$objPB->setAll($#index);	
+	for(my $i = 0; $i <= $#index; $i++){
+		$objPB->nowAndPrint($i);
+		print $OUT $contents[$index[$i]]
+	}
+	close $OUT;
+
+	print("sort_raw_data_text ends.\n");
+	<STDIN>;
+}
+
 sub GNDE_Extractor{
 	my $regex = "^GN|^DE";
 	
@@ -292,7 +361,8 @@ sub _Line_Code_Extractor_Template{
 	close $RF;
 	
 	print $code_key."_Extractor ends. ";
-	printf("%0.3f sec.\n",Time::HiRes::time - $startTime); 
+	my $endTime = Time::HiRes::time - $startTime;
+	print("$endTime sec.\n"); 
 }
 
 sub _Extract_Processor_Simple{

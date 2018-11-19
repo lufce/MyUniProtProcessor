@@ -10,71 +10,116 @@ package MyFTP;
 
 require "MyProgressBar.pm";
 require "File_and_Directory_catalog.pl";  # MyName::
+require "Shared_Process.pl"; # MyP::
 
-#my $serch_file_path = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
-my $serch_file_path = MyName::get_data_file_path($MyName::FT_KEY);
+#my $search_file_path = "../data/human/rev/ID-FT_rev_uniprot-allFlat.txt";
+my $search_file_path = MyName::get_data_file_path($MyName::FT_KEY);
+
+###
+
+###
+
+sub isTransmembrane{
+	my $query_key = "TRANSMEM";
+	my ($id_list_ref, $query_dsc) = &MyP::_check_argument1(@_);
+	
+	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
+}
+
+sub isLipidated{
+	my $query_key = "LIPID";
+	my ($id_list_ref, $query_dsc) = &MyP::_check_argument1(@_);
+	
+	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
+}
 
 sub get_FT_Contents_By_Key_And_Description{
 	#
-	my ($query_key, $query_dsc, $key) = @_;
 	
-	my $objPB = new MyProgressBar;
+	my ($query_id_list_ref, $query_key, $query_dsc) = @_;
 	
 	my @matched_id = ();
 	my %id_to_code = ();
 	
 	#open database file
-	open DB, $serch_file_path or die($!);
+	open my $DB, '<', $search_file_path or die($!);
 	
-	$objPB -> setAll($serch_file_path);
+	my $objPB = new MyProgressBar;
+	$objPB -> setAll($search_file_path);
 	
 	#ID行がくるまでループ
-	while(<DB>){
+	while(my $line = <$DB>){
 	
-		$objPB -> addNowAndPrint($_);
+		$objPB -> addNowAndPrint($line);
 		
-		if(m/^ID   (.+?) /){
+		if($line =~ m/^ID   (.+?) /){
 			my $this_id = $1;
+			
+			#もしIDリストが渡されていた場合、見つかったIDがリストに含まれているかを調べる。
+			#含まれていなかったら、またIDを探すループに戻る。
+			if(ref($query_id_list_ref) eq "ARRAY"){
+				if(!&MyP::_has_overrup_in_array($query_id_list_ref,$this_id)){
+					next;
+				}
+			}
+			
 			my @matched_line = ();
 			
 			#FTのKeyがqueryと一致するものを探す
-			while(<DB>){
+			while($line = <$DB>){
 				
-				$objPB -> addNowAndPrint($_);
+				$objPB -> addNowAndPrint($line);
 				
 				#タンパク質の最後の行になったらID取得ループに戻る。
-				if(m|^//$|){ last; }
+				if($line =~ m|^//$|){ last; }
 				
 				#目的Keyが見つからなかったら次の行に移る。
-				if(!m/^FT   $query_key/){ next; }
+				if($line !~ m/^FT   $query_key/){ next; }
 				
 				#目的のKeyが見つかったら、目的のDescriptionを含むかを調べる。
 				#目的のDescriptionを含まないなら次の行に移る。(query_dscの前の文字数を27文字にすることで、query_dscに""を渡したときに、Keyだけの検索を行うことができる。)
-				if(!m/.{27,}$query_dsc/){ next; }
+				if($line !~ m/.{27,}$query_dsc/){ next; }
 				
 				chomp;
-				push(@matched_line,$_);
+				push(@matched_line, $line);
 			}
 			
 			#queryに合致する行があったら、IDリストへの追加と内容をハッシュに登録をする。
 			if($#matched_line != -1){
 				
-				if( defined($key) ){
-					$id_to_code{$this_id} = &_make_FT_Code(\@matched_line, $key);
-				}else{
-					$id_to_code{$this_id} = &_make_FT_Code(\@matched_line);
-				}
-				
+				$id_to_code{$this_id} = &_make_Data_Code(\@matched_line);
 				push(@matched_id,$this_id);	
 			}
 		}
 	}
 	
-	for (@matched_id){
-		print("$_ : $id_to_code{$_}\n");
+	foreach my $id (@matched_id){
+		print("$id : $id_to_code{$id}\n");
 	}
 	
 	return \@matched_id, \%id_to_code;
+}
+
+sub _make_Data_Code{
+	#FT行が入った配列を受け取って、"Key1*,Start*,End*,Description*;Key2 ..."というフォーマットに変える。
+	
+	my $matched_line_ref = shift;
+	
+	my $code ="";
+	
+	#positionについて開始位置と終了位置の間を".."で区切る。
+	#position同士やdescription同士を"*,"で区切る
+	foreach my $line (@$matched_line_ref){
+		my $item_ref = &_getFTAllItems($line);
+		
+		$code = $code."$$item_ref[0]*,$$item_ref[1]*,$$item_ref[2]*,$$item_ref[3]*;"
+	}
+	
+	#文末についている区切り文字*;を消す。
+	$code = substr($code, 0, -2);
+	
+	return $code;
+	
 }
 
 sub decode_FT_Code{
@@ -105,28 +150,6 @@ sub decode_FT_Code{
 	if($#end != $#dsc){return -1;}
 	
 	return \@key, \@start, \@end, \@dsc
-}
-
-sub _make_FT_Code{
-	#FT行が入った配列を受け取って、"Key1*,Start*,End*,Description*;Key2 ..."というフォーマットに変える。
-	
-	my $matched_line_ref = shift;
-	
-	my $code ="";
-	
-	#positionについて開始位置と終了位置の間を".."で区切る。
-	#position同士やdescription同士を"*,"で区切る
-	foreach my $line (@$matched_line_ref){
-		my $item_ref = &_getFTAllItems($line);
-		
-		$code = $code."$$item_ref[0]*,$$item_ref[1]*,$$item_ref[2]*,$$item_ref[3]*;"
-	}
-	
-	#文末についている区切り文字*;を消す。
-	$code = substr($code, 0, -2);
-	
-	return $code;
-	
 }
 
 sub _getFTAllItems{

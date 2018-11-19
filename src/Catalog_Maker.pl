@@ -3,6 +3,9 @@
 package MyCM;
 
 use Time::HiRes;
+use strict;
+use warnings;
+
 require "MyProgressBar.pm";
 require "File_and_Directory_catalog.pl";  # MyName::
 
@@ -34,11 +37,11 @@ sub _test{
 
 sub make_FT_trimmed_file{
 	
-	$data_dir = MyName::get_data_file_dir();
-	$record_file_name = $trimed_surfix.$MyName::FT_KEY.MyName::get_raw_data_file_name();
+	my $data_dir = MyName::get_data_file_dir();
+	my $record_file_name = $trimed_surfix.$MyName::FT_KEY.MyName::get_raw_data_file_name();
 	
-	open ($IN, '<', MyName::get_data_file_path($MyName::FT_KEY)) or die($!);
-	open ($OUT, '>', $data_dir.$record_file_name) or die($!);
+	open (my $IN, '<', MyName::get_data_file_path($MyName::FT_KEY)) or die($!);
+	open (my $OUT, '>', $data_dir.$record_file_name) or die($!);
 	
 	while(my $line = <$IN>){
 		$line = &_del_contents_in_curly_brackets($line);
@@ -57,12 +60,12 @@ sub make_FT_description_catalog_by_FT_key{
 	my $key_catalog_ref =shift;
 	my @key_catalog = @$key_catalog_ref;
 	
-	$data_dir = MyName::get_data_file_dir();
-	$trimmed_file_name = $trimed_surfix.$MyName::FT_KEY.MyName::get_raw_data_file_name();
+	my $data_dir = MyName::get_data_file_dir();
+	my $trimmed_file_name = $trimed_surfix.$MyName::FT_KEY.MyName::get_raw_data_file_name();
 	
 	#TODO これはFTファイルをトリムしたファイルに変えないといけない。
 	my $FT_file_path = $data_dir.$trimmed_file_name;
-	open ($IN, '<', $FT_file_path) or die($!);
+	open (my $IN, '<', $FT_file_path) or die($!);
 	
 	my $objPB = new MyProgressBar;
 	$objPB->setAll($FT_file_path);
@@ -109,7 +112,7 @@ sub make_FT_key_catalog{
 	my @catalog = ();
 	my $FT_file_path = MyName::get_data_file_path($MyName::FT_KEY);
 	
-	open ($IN, '<', $FT_file_path) or die($!);
+	open (my $IN, '<', $FT_file_path) or die($!);
 	
 	my $objPB = new MyProgressBar;
 	$objPB->setAll($FT_file_path);

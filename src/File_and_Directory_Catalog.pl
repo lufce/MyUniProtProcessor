@@ -1,4 +1,7 @@
 
+use strict;
+use warnings;
+
 package MyName;
 
 my $species = "human";
@@ -7,8 +10,9 @@ my $data_file_dir = "../data/$species/rev/";
 my $catalog_dir = "../contents_catalog_list/$species/rev/";
 
 #my $raw_data_file_name = "rev_uniprot-all.txt";
-my $raw_data_file_name = "uniprot_test_doc.txt";
+#my $raw_data_file_name = "uniprot_test_doc.txt";
 #my $raw_data_file_name = "181101_rev_uniprot_human_all.txt";
+my $raw_data_file_name = "sorted_181101_rev_uniprot_human_all.txt";
 
 my $KEY_COUNT = 6;
 our $GNDE_KEY = "GNDE";

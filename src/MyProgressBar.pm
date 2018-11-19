@@ -1,5 +1,8 @@
 ﻿#160825		ver1.0		完成。
 
+use strict;
+use warnings;
+
 package MyProgressBar;
 
 sub new{
@@ -51,10 +54,12 @@ sub setAll{
 
 	if($all =~ m/\A\d+\Z/){
 		$self->{all}=$all;
+		$self->{now}=0;
 		return 1;
 	}else{
 		if(-f $all){
 			$self->{all} = -s $all;
+			$self->{now}=0;
 			return 1;
 		}else{
 			return 0;
@@ -72,10 +77,17 @@ sub printProgressBar{
 		if($progress == $self->{former}){
 			return;
 		}else{
-			print "■" x $progress . "□" x (10-$progress) . "\r";
-			#print "\n";
+			{
+				local $| = 1;
+				print "*" x $progress . "." x (10-$progress) . "\r";
+				#print "\n";
+			}
 			
 			$self->{former} = $progress;
+			
+			if($progress == 10){
+				print "\n";
+			}
 			
 			return;
 		}
