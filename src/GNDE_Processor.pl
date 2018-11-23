@@ -35,7 +35,7 @@ sub get_all_ID{
 }
 
 sub ID2RecName{
-	my $query_id_list_ref= MyP::_check_argument_ID_list(shift);
+	my $query_id_list_ref= MyP::check_argument_1_ID_list(shift);
 	
 	if($query_id_list_ref eq ""){
 		&_function_framework($CODE_ID2RecName);

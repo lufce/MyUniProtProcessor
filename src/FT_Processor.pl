@@ -21,14 +21,14 @@ my $search_file_path = MyName::get_data_file_path($MyName::FT_KEY);
 
 sub isTransmembrane{
 	my $query_key = "TRANSMEM";
-	my ($id_list_ref, $query_dsc) = &MyP::_check_argument1(@_);
+	my ($id_list_ref, $query_dsc) = &MyP::check_argument_2_ID_list_string(@_);
 	
 	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
 }
 
 sub isLipidated{
 	my $query_key = "LIPID";
-	my ($id_list_ref, $query_dsc) = &MyP::_check_argument1(@_);
+	my ($id_list_ref, $query_dsc) = &MyP::check_argument_2_ID_list_string(@_);
 	
 	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
 }
@@ -58,7 +58,7 @@ sub get_FT_Contents_By_Key_And_Description{
 			#もしIDリストが渡されていた場合、見つかったIDがリストに含まれているかを調べる。
 			#含まれていなかったら、またIDを探すループに戻る。
 			if(ref($query_id_list_ref) eq "ARRAY"){
-				if(!&MyP::_has_overrup_in_array($query_id_list_ref,$this_id)){
+				if(!&MyP::has_overrup_in_array($query_id_list_ref,$this_id)){
 					next;
 				}
 			}
@@ -80,7 +80,7 @@ sub get_FT_Contents_By_Key_And_Description{
 				#目的のDescriptionを含まないなら次の行に移る。(query_dscの前の文字数を27文字にすることで、query_dscに""を渡したときに、Keyだけの検索を行うことができる。)
 				if($line !~ m/.{27,}$query_dsc/){ next; }
 				
-				chomp;
+				chomp($line);
 				push(@matched_line, $line);
 			}
 			
@@ -93,26 +93,25 @@ sub get_FT_Contents_By_Key_And_Description{
 		}
 	}
 	
-	foreach my $id (@matched_id){
-		print("$id : $id_to_code{$id}\n");
-	}
+#	foreach my $id (@matched_id){
+#		print("$id : $id_to_code{$id}\n");
+#	}
 	
 	return \@matched_id, \%id_to_code;
 }
 
 sub _make_Data_Code{
-	#FT行が入った配列を受け取って、"Key1*,Start*,End*,Description*;Key2 ..."というフォーマットに変える。
+	#FT行が入った配列を受け取って、"Key1*,Start-End*,Description*;Key2 ..."というフォーマットに変える。
 	
 	my $matched_line_ref = shift;
 	
 	my $code ="";
 	
-	#positionについて開始位置と終了位置の間を".."で区切る。
-	#position同士やdescription同士を"*,"で区切る
+	#区切りを入れていく。
 	foreach my $line (@$matched_line_ref){
 		my $item_ref = &_getFTAllItems($line);
 		
-		$code = $code."$$item_ref[0]*,$$item_ref[1]*,$$item_ref[2]*,$$item_ref[3]*;"
+		$code = $code."$$item_ref[0]*,$$item_ref[1]-$$item_ref[2]*,$$item_ref[3]*;"
 	}
 	
 	#文末についている区切り文字*;を消す。
@@ -120,36 +119,6 @@ sub _make_Data_Code{
 	
 	return $code;
 	
-}
-
-sub decode_FT_Code{
-	#"Key1*,Start*,End*,Description*;Key2 ..."というコードを受け取って、Key配列、Start配列、End配列、Description配列を返す。
-	#デコードに失敗すると-1を返す。
-	
-	my $code = shift;
-	
-	my @items = split(/\*;/, $code);
-	
-	my @key = ();
-	my @start = ();
-	my @end = ();
-	my @dsc = ();
-	
-	foreach my $i (@items){
-		my @buf = split(/\*,/, $i);
-		
-		push(@key, $buf[0]);
-		push(@start, $buf[1]);
-		push(@end, $buf[2]);
-		push(@dsc, $buf[3]);
-	}
-	
-	#key, start, end, dscの情報の数は一致するはず。しなかったらエラーを返す。
-	if($#key != $#start or $#key != $#end or $#key != $#dsc){return -1;}
-	if($#start != $#end or $#start != $#dsc){return -1;}
-	if($#end != $#dsc){return -1;}
-	
-	return \@key, \@start, \@end, \@dsc
 }
 
 sub _getFTAllItems{

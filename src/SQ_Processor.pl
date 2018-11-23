@@ -17,19 +17,19 @@ my $search_file_path = MyName::get_data_file_path($MyName::SQ_KEY);
 my @aa_one_letter = ("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y");
 
 ###
-my ($id_ref, $region_ref) = &motif_search("LL.YKH");
+my ($id_ref, $range_ref) = &motif_search("LL.YKH");
 my @id_list = @$id_ref;
 my $num = @id_list;
 
 foreach my $id (@id_list){
-	print("$id: $$region_ref{$id}\n");
+	print("$id: $$range_ref{$id}\n");
 }
 print("$num\n");
 
 ###
 
 sub motif_search{
-	my ($query_id_list_ref, $query) = MyP::_check_argument1(@_);
+	my ($query_id_list_ref, $query) = MyP::check_argument_2_ID_list_string(@_);
 	
 	if($query eq ""){
 		#モチーフが指定されていなかったら、配列全体を取得すると解釈する。
@@ -37,7 +37,7 @@ sub motif_search{
 	}
 	
 	my @matched_id = ();
-	my %matched_region =();
+	my %matched_range =();
 	
 	#open database file
 	open my $DB, '<', $search_file_path or die($!);
@@ -56,7 +56,7 @@ sub motif_search{
 			#もしIDリストが渡されていた場合、見つかったIDがリストに含まれているかを調べる。
 			#含まれていなかったら、またIDを探すループに戻る。
 			if(ref($query_id_list_ref) eq "ARRAY"){
-				if(!&MyP::_has_overrup_in_array($query_id_list_ref,$this_id)){
+				if(!&MyP::has_overrup_in_array($query_id_list_ref,$this_id)){
 					next;
 				}
 			}
@@ -67,23 +67,25 @@ sub motif_search{
 			$objPB -> addNowAndPrint($seq);
 			
 			chomp($seq);
-			my $region = "";
+			my $range = "";
 			while($seq =~ m/$query/g){
-				$region = $region.sprintf("%d-%d,", length($`)+1, length($`.$&) );
+				#SQデータコード。start-endでそれを","で区切る
+				
+				$range = $range.sprintf("%d-%d,", length($`)+1, length($`.$&) );
 			}
 			
-			unless($region eq ""){
+			unless($range eq ""){
 				push(@matched_id, $this_id);
 				
-				chop($region);
-				$matched_region{$this_id} = $region;
+				chop($range);
+				$matched_range{$this_id} = $range;
 			}
 		}
 	}			
 	
 	close $DB;
 	
-	return \@matched_id, \%matched_region;
+	return \@matched_id, \%matched_range;
 	
 }
 
