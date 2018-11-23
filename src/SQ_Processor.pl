@@ -17,14 +17,15 @@ my $search_file_path = MyName::get_data_file_path($MyName::SQ_KEY);
 my @aa_one_letter = ("A","C","D","E","F","G","H","I","K","L","M","N","P","Q","R","S","T","V","W","Y");
 
 ###
-my ($id_ref, $range_ref) = &motif_search("LL.YKH");
-my @id_list = @$id_ref;
-my $num = @id_list;
 
-foreach my $id (@id_list){
-	print("$id: $$range_ref{$id}\n");
-}
-print("$num\n");
+#my ($id_ref, $position_ref) = &motif_search("LL.YKH");
+#my @id_list = @$id_ref;
+#my $num = @id_list;
+#
+#foreach my $id (@id_list){
+#	print("$id: $$position_ref{$id}\n");
+#}
+#print("$num\n");
 
 ###
 
@@ -37,7 +38,7 @@ sub motif_search{
 	}
 	
 	my @matched_id = ();
-	my %matched_range =();
+	my %matched_position =();
 	
 	#open database file
 	open my $DB, '<', $search_file_path or die($!);
@@ -67,26 +68,78 @@ sub motif_search{
 			$objPB -> addNowAndPrint($seq);
 			
 			chomp($seq);
-			my $range = "";
+			my $position = "";
 			while($seq =~ m/$query/g){
-				#SQデータコード。start-endでそれを","で区切る
+				#Positionコードを作る。Rangeを","で区切る
 				
-				$range = $range.sprintf("%d-%d,", length($`)+1, length($`.$&) );
+				$position = $position.sprintf("%d-%d,", length($`)+1, length($`.$&) );
 			}
 			
-			unless($range eq ""){
+			unless($position eq ""){
 				push(@matched_id, $this_id);
 				
-				chop($range);
-				$matched_range{$this_id} = $range;
+				chop($position);
+				$matched_position{$this_id} = $position;
 			}
 		}
 	}			
 	
 	close $DB;
 	
-	return \@matched_id, \%matched_range;
+	my @answer = (\@matched_id, \%matched_position);
+	return \@answer;
 	
+}
+
+sub get_peptide_by_code{
+	my ($query_id_list_ref, $code_ref) = @_;
+	
+	my %matched_peptide =();
+	
+	#open database file
+	open my $DB, '<', $search_file_path or die($!);
+	
+	my $objPB = new MyProgressBar;
+	$objPB -> setAll($search_file_path);
+	
+	#ID行がくるまでループ
+	while(my $line = <$DB>){
+	
+		$objPB -> addNowAndPrint($line);
+		
+		if($line =~ m/^ID   (.+?) /){
+			my $this_id = $1;
+			
+			#もしIDリストが渡されていた場合、見つかったIDがリストに含まれているかを調べる。
+			#含まれていなかったら、またIDを探すループに戻る。
+			if(ref($query_id_list_ref) eq "ARRAY"){
+				if(!&MyP::has_overrup_in_array($query_id_list_ref,$this_id)){
+					next;
+				}
+			}
+			
+			#配列を取得してrange部分を抜き出す。
+			my $seq = <$DB>;
+			$objPB -> addNowAndPrint($seq);
+			chomp($seq);
+			
+			my $ranges_ref = &MyP::get_ranges_in_code($$code_ref{$this_id});
+			my $peptide = "";
+			
+			foreach my $range (@$ranges_ref){
+				my @both_ends = split(/-/,$range);
+				my $temp = substr($seq,$both_ends[0]-1, $both_ends[1]-$both_ends[0]+1);
+				$peptide = $peptide."$temp,";
+			}
+			
+			chop($peptide);
+			$matched_peptide{$this_id} = $peptide;
+		}
+	}			
+	
+	close $DB;
+	
+	return \%matched_peptide;
 }
 
 

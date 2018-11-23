@@ -125,9 +125,55 @@ sub id_deselection{
 	return \@deselected;
 }
 
+sub range_partial_inclusion{
+	#引数1のrangeのどれか１つが、引数2のrangeに含まれているかどうか調べる。
+	
+	my ($ans1, $ans2) = @_;
+	
+	my (@match_id,%match_code);
+	
+	#まず共通に持っているIDを調べる。
+	my $shared_id_ref = &id_intersection($$ans1[0], $$ans2[0]);
+	
+	foreach my $id (@$shared_id_ref){
+		
+		my $ranges_ref1 = &MyP::get_ranges_in_code($$ans1[1]{$id});
+		my $ranges_ref2 = &MyP::get_ranges_in_code($$ans2[1]{$id});
+		
+		my $length1 = @$ranges_ref1;
+		my $length2 = @$ranges_ref2;
+		
+		my $code = "";
+		for (my $i = 0; $i < $length1; $i++){
+			for (my $j = 0; $j < $length2; $j++){
+				
+				if( _is_included_in_latter_range($$ranges_ref1[$i],$$ranges_ref2[$j]) ){
+					$code = $code."$$ranges_ref1[$i],"
+				}
+				
+			}
+		}
+		
+		if($code ne ""){
+			
+			#最後の区切り文字を除く。
+			chop($code);
+			
+			#登録作業
+			push(@match_id, $id);
+			$match_code{$id} = $code;
+		}
+	}
+	
+	my @this_ans = (\@match_id, \%match_code);
+	return \@this_ans;
+}
+
 sub _has_overlap_between_ranges{
 	
-	my ($start1, $end1, $start2, $end2) = MyP::check_argument_4_numeric(@_);
+	my ($range1, $range2) = MyP::check_argument_2_ranges(@_);
+	my ($start1, $end1) = split(/\-/, $range1);
+	my ($start2, $end2) = split(/\-/, $range2);
 	
 	if($start1 > $end2){return 0;}
 	if($start2 > $end1){return 0;}
@@ -137,44 +183,19 @@ sub _has_overlap_between_ranges{
 sub _is_included_in_latter_range{
 	#第一引数の範囲が第二引数の範囲に含まれている
 	
-	my ($start1, $end1, $start2, $end2) = MyP::check_argument_4_numeric(@_);
+	my ($range1, $range2) = MyP::check_argument_2_ranges(@_);
+	my ($start1, $end1) = split(/\-/, $range1);
+	my ($start2, $end2) = split(/\-/, $range2);
 	
 	if($start1 < $start2 ){return 0;}
 	if($end1 > $end2 ){return 0;}
 	return 1;
 }
 
-sub _get_range_in_ft_data_code{
-	
-	my ($id_list_ref, $code_hash_ref) = MyP::check_argument_2_ID_list_hash(@_);
-	
-	my %id2range;
-	
-	foreach my $id (@$id_list_ref){
-		my $code = $$code_hash_ref{$id};
-		
-		my $range_ref = MyP::get_range_from_ft_code($code);
-		
-		$id2range{$id} = $range_ref;
-	}
-	
-	return \%id2range;
+sub _get_ranges_in_ft_data_code{
+	return MyP::get_range_from_ft_code(shift);
 }
 
-sub _get_range_in_sq_data_code{
-	
-	my ($id_list_ref, $code_hash_ref) = MyP::check_argument_2_ID_list_hash(@_);
-	
-	my %id2range;
-	
-	foreach my $id (@$id_list_ref){
-		my $code = $$code_hash_ref{$id};
-		
-		my ($start,$end) = MyP::decode_sq_code($code);
-		
-		my @range = ($start, $end);
-		$id2range{$id} = \@range;
-	}
-	
-	return \%id2range;
+sub _get_ranges_in_position_code{
+	return MyP::decode_position_code(shift);
 }

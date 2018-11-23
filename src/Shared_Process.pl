@@ -14,14 +14,11 @@ sub check_argument_2_ID_list_string{
 	#引数が文字列か配列のリファレンスかを判断して、返す。
 	#中身が無い引数に関しては空の文字列を返す。	
 	
-	my $arg_num = @_;
+	my $num = @_;
 	
 	my ($id_list_ref, $query);
 	
-	if($arg_num > 2){
-		die ("$!\n"."Too many arguments./n")
-		
-	}elsif($arg_num == 2){
+	if($num == 2){
 		
 		$id_list_ref = 
 				  ref($_[0]) eq "ARRAY" ? $_[0] 
@@ -30,16 +27,18 @@ sub check_argument_2_ID_list_string{
 				                        
 		$query   = ref($_[0]) eq "ARRAY" ? $_[1] : $_[0];
 		
-	}elsif($arg_num == 1){
+	}elsif($num == 1){
 		
 		$id_list_ref = ref($_[0]) eq "ARRAY" ? $_[0] : "";
 		$query   = ref($_[0]) eq "ARRAY" ? "" : $_[0];
 		
-	}else{
+	}elsif($num == 0){
 		
 		$id_list_ref = "";
 		$query = "";
 		
+	}else{
+		die ("The numeber of arguments ($num) is illegal.")
 	}
 	
 	return $id_list_ref, $query;
@@ -51,7 +50,7 @@ sub check_argument_2_ID_list_hash{
 	my $num = @_;
 	
 	if($num != 2){
-		die ("The numeber of arguments is illegal.")
+		die ("The numeber of arguments ($num) is illegal.")
 	}
 	
 	my ($arg1, $arg2) = @_ ;
@@ -92,7 +91,7 @@ sub check_argument_2_ID_lists{
 	my $num = @_;
 	
 	if($num != 2){
-		die ("The numeber of arguments is illegal.")
+		die ("The numeber of arguments ($num) is illegal.")
 	}
 	
 	my ($arg1, $arg2) = @_ ;
@@ -106,18 +105,19 @@ sub check_argument_2_ID_lists{
 	}
 }
 
-sub check_argument_4_numeric{
-	#引数が4つで、全部数値か調べる。
+sub check_argument_2_ranges{
+	#引数が2つで、rangeか調べる。
+	#rangeの調べ方は正規表現で数字がハイフンで繋がれているかを調べる。
 	
 	my $num = @_;
 	
-	if($num != 4){
-		die ("The numeber of arguments is illegal.")
+	if($num != 2){
+		die ("The numeber of arguments ($num) is illegal.")
 	}
 	
 	foreach my $item (@_){
-		if($item !~ m/^\d+$/){
-			die("Non-numeric argument exists.")
+		if($item !~ m/^\d+-\d+$/){
+			die("Non-numeric argument: $item")
 		}
 	}
 	
@@ -166,6 +166,18 @@ sub decode_ft_code{
 	return \@key, \@range, \@dsc;
 }
 
+sub get_ranges_in_code{
+	my $code = shift;
+	
+	if($code =~ m/\*,/){
+		return &get_range_from_ft_code($code);
+	}elsif($code =~ m/-/){
+		return &decode_position_code($code);
+	}
+	
+	return "";
+}
+
 sub get_range_from_ft_code{
 	my $code = shift;
 	my @items = split(/\*;/, $code);
@@ -196,8 +208,8 @@ sub get_dsc_from_ft_code{
 	return \@dsc;
 }
 
-sub decode_sq_code{
-	#SQデータコードを@rangeの配列に分ける
+sub decode_position_code{
+	#Positionコードを@rangeの配列に分ける
 	
 	my $code = shift;
 	my @range;

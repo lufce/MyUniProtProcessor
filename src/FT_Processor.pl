@@ -19,24 +19,34 @@ my $search_file_path = MyName::get_data_file_path($MyName::FT_KEY);
 
 ###
 
-sub isTransmembrane{
+sub is_transmembrane{
 	my $query_key = "TRANSMEM";
+	my $converse_dsc = "";
 	my ($id_list_ref, $query_dsc) = &MyP::check_argument_2_ID_list_string(@_);
 	
-	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
+	return _get_ft_contents_by_key_and_description($id_list_ref, $query_key, $query_dsc, $converse_dsc)
 }
 
-sub isLipidated{
+sub is_not_transmembrane{
+	my $query_key = "TRANSMEM";
+	my $converse_dsc = "not transmembrane region";
+	my ($id_list_ref, $query_dsc) = &MyP::check_argument_2_ID_list_string(@_);
+	
+	return _get_ft_contents_by_key_and_description($id_list_ref, $query_key, $query_dsc, $converse_dsc)
+}
+
+sub is_lipidated{
 	my $query_key = "LIPID";
+	my $converse_dsc = "";
 	my ($id_list_ref, $query_dsc) = &MyP::check_argument_2_ID_list_string(@_);
 	
-	return get_FT_Contents_By_Key_And_Description($id_list_ref, $query_key, $query_dsc)
+	return _get_ft_contents_by_key_and_description($id_list_ref, $query_key, $query_dsc, $converse_dsc)
 }
 
-sub get_FT_Contents_By_Key_And_Description{
+sub _get_ft_contents_by_key_and_description{
 	#
 	
-	my ($query_id_list_ref, $query_key, $query_dsc) = @_;
+	my ($query_id_list_ref, $query_key, $query_dsc, $converse_dsc) = @_;
 	
 	my @matched_id = ();
 	my %id_to_code = ();
@@ -52,8 +62,9 @@ sub get_FT_Contents_By_Key_And_Description{
 	
 		$objPB -> addNowAndPrint($line);
 		
-		if($line =~ m/^ID   (.+?) /){
+		if($line =~ m/^ID   (.+?) .+?(\d+?) AA./){
 			my $this_id = $1;
+			my $aa_length = $2;
 			
 			#もしIDリストが渡されていた場合、見つかったIDがリストに含まれているかを調べる。
 			#含まれていなかったら、またIDを探すループに戻る。
@@ -85,10 +96,21 @@ sub get_FT_Contents_By_Key_And_Description{
 			}
 			
 			#queryに合致する行があったら、IDリストへの追加と内容をハッシュに登録をする。
-			if($#matched_line != -1){
+			if(@matched_line != 0){
 				
-				$id_to_code{$this_id} = &_make_Data_Code(\@matched_line);
-				push(@matched_id,$this_id);	
+				if($converse_dsc eq ""){
+					#合致した部分をコード化する場合
+					$id_to_code{$this_id} = &_make_ft_code(\@matched_line);
+					push(@matched_id,$this_id);
+				}else{
+					#合致した部分以外をコード化する場合
+					$id_to_code{$this_id} = &_make_converse_ft_code(\@matched_line, $aa_length, $converse_dsc);
+					push(@matched_id,$this_id);
+				}
+			}elsif(@matched_line == 0 and $converse_dsc ne ""){
+				#合致した行が無かったとしても、モードが合致した部分以外のコード化なら登録作業をする。
+				$id_to_code{$this_id} = &_make_converse_ft_code(\@matched_line, $aa_length, $converse_dsc);
+				push(@matched_id,$this_id);
 			}
 		}
 	}
@@ -97,10 +119,13 @@ sub get_FT_Contents_By_Key_And_Description{
 #		print("$id : $id_to_code{$id}\n");
 #	}
 	
-	return \@matched_id, \%id_to_code;
+	#return \@matched_id, \%id_to_code;
+	
+	my @answer_pack = (\@matched_id, \%id_to_code);
+	return \@answer_pack;
 }
 
-sub _make_Data_Code{
+sub _make_ft_code{
 	#FT行が入った配列を受け取って、"Key1*,Start-End*,Description*;Key2 ..."というフォーマットに変える。
 	
 	my $matched_line_ref = shift;
@@ -109,7 +134,7 @@ sub _make_Data_Code{
 	
 	#区切りを入れていく。
 	foreach my $line (@$matched_line_ref){
-		my $item_ref = &_getFTAllItems($line);
+		my $item_ref = &_get_ft_all_items($line);
 		
 		$code = $code."$$item_ref[0]*,$$item_ref[1]-$$item_ref[2]*,$$item_ref[3]*;"
 	}
@@ -121,15 +146,62 @@ sub _make_Data_Code{
 	
 }
 
-sub _getFTAllItems{
+sub _make_converse_ft_code{
+	#FT行が入った配列とタンパク質の長さを受け取って、それ以外の領域を"CONVERSE*,Start-End*,$converse_dsc*;Key2 ..."というフォーマットに変える。
+	
+	my ($matched_line_ref, $aa_length, $converse_dsc) = @_;
+	
+	#配列の初期化。
+	my @aa;
+	for(my $i = 0; $i <= $aa_length + 1; $i++){
+		push(@aa, 0);
+	}
+	$aa[0] = 1;              #配列を1スタートにするので、インデックス0の要素は原則使わない。
+	$aa[$aa_length + 1] = 1; #アミノ酸配列が終わったことを示す終了ポインタ扱いの要素。
+	
+	#FT行に含まれていた部分を1に変える。
+	foreach my $line (@$matched_line_ref){
+		my $from = &_get_ft_from($line);
+		my $to = &_get_ft_to($line);
+		
+		for (my $i = $from; $i <= $to; $i++){
+			$aa[$i] = 1;
+		}
+	}
+	
+	#@aaの0の領域をrangeに変換する
+	my $code = "";
+	my $search_start = 1;
+	my ($from, $to);
+	for (my $i = 1; $i <= $aa_length + 1; $i++){
+		if($search_start and $aa[$i] == 0){
+			$from = $i;
+			$search_start = 0;
+		}elsif( not($search_start) and $aa[$i] == 1){
+			$to = $i - 1;
+			
+			$code = $code."CONVERSE*,$from-$to*,$converse_dsc*;";
+			
+			$search_start = 1;
+		}
+	}
+	
+	#文末についている区切り文字*;を消す。
+	$code = substr($code, 0, -2);
+	
+	return $code;
+	
+}
+
+sub _get_ft_all_items{
 	my $FTLine = shift;
 	
-	my @FTItems = (&_getFTKey($FTLine), &_getFTFrom($FTLine), &_getFTTo($FTLine), &_getFTDescription($FTLine) );
+	my @FTItems = (&_get_ft_key($FTLine), &_get_ft_from($FTLine), &_get_ft_to($FTLine), &_get_ft_description($FTLine) );
 	
 	return \@FTItems;
 }
 
-sub _getFTFrom{
+sub _get_ft_from{
 	my $FTLine = shift;
 	
 	my $FTFrom = substr($FTLine, 14, 6);
@@ -138,7 +210,7 @@ sub _getFTFrom{
 	return $FTFrom;
 }
 
-sub _getFTTo{
+sub _get_ft_to{
 	my $FTLine = shift;
 	
 	my $FTTo = substr($FTLine, 21, 6);
@@ -147,7 +219,7 @@ sub _getFTTo{
 	return $FTTo;
 }
 
-sub _getFTKey{
+sub _get_ft_key{
 	my $FTLine = shift;
 	
 	my $FTKey = substr($FTLine, 5, 8);
@@ -156,7 +228,7 @@ sub _getFTKey{
 	return $FTKey;
 }
 
-sub _getFTDescription{
+sub _get_ft_description{
 	# If there is no description, this subroutin returns "".
 	
 	my $FTLine = shift;
