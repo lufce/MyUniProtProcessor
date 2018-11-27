@@ -44,9 +44,13 @@ sub ID2RecName{
 	}
 }
 
+sub RecName_serch{
+	
+}
+
 sub _function_framework{
 	
-	my ($process_code, $query_id_list_ref) = @_;
+	my ($process_code, $query_id_list_ref, $query) = @_;
 	
 	my @contents = ();
 	my $search_all = 0;
@@ -92,6 +96,20 @@ sub _function_framework{
 }
 
 sub _process_ID2RecName{
+	my ( $DB, $objPB, $contents_ref) = @_;
+	
+	while(my $line = <$DB>){
+		$objPB->addNowAndPrint($line);
+		
+		if($line =~ m/DE   RecName: Full=(.+);/){
+			my $name = $1;
+			$name =~ s/{.+?}//g;
+			push(@$contents_ref, $name);
+		}
+	}
+}
+
+sub _process_RecName_serch{
 	my ( $DB, $objPB, $contents_ref) = @_;
 	
 	while(my $line = <$DB>){

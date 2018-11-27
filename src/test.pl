@@ -5,6 +5,13 @@
 # ID配列の要素にアクセス      my $ele  = $$answer[0][$i];
 # IDのデータコードにアクセス  my $code = $$answer[1]{ $$answer[0][$i] }; 
 
+#TODO やり残し
+#SL行のトリム処理と探索用関数の整備
+#GO行のトリム処理と探索用関数の整備
+#Catalog_Maker.plの完成
+#Line Extractorの_simple_line_code_extractorの高速化。
+
+
 require "FT_Processor.pl";
 require "Shared_Process.pl";
 require "Merge_Processor.pl";
