@@ -35,10 +35,16 @@ require "SQ_Processor.pl";
 #print("$id_length hits!\nend");
 
 my @process;
-push(@process, &MyFTP::is_transmembrane());
-push(@process, &MySQP::get_peptide_by_code($process[0][0],$process[0][1]) );
 
-foreach my $id (@{$process[0][0]}){
+push( @process, &MySQP::motif_search("LL.Y"));
+push( @process, &MyFTP::is_transmembrane($process[0][0]) );
+push( @process, &MyFTP::is_not_transmembrane($process[1][0]) );
+push( @process, &MyMerge::range_partial_inclusion($process[0], $process[2]) );
+#push( @process, &MySQP::get_peptide_by_code($process[2][0],$process[2][1]) );
+
+foreach my $id (@{$process[3][0]}){
 	print("$id\n");
-	print("$process[1]{$id}\n");
+	#print("$process[1]{$id}\n");
 }
+my $len = @{$process[3][0]};
+print("$len hits\n");
